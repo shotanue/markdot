@@ -9,9 +9,16 @@ This package requires Bun.
 Todo: publish single compiled binary.
 
 ```bash
-bun build ./src/main.ts --compile --outfile markdot
+bun run build
 ```
 
-## Example
+`bun` generates binary to src/markdot.
 
-See [example.dotfile.md](./example.dotfile.md)
+## help
+
+Run this command.
+
+```bash
+markdot --help
+```
+

@@ -2,10 +2,37 @@
   "name": "markdot",
   "module": "src/index.ts",
   "type": "module",
+  "bin": {
+    "markdot": "src/index.ts"
+  },
   "devDependencies": {
-    "bun-types": "latest"
+    "@biomejs/biome": "1.2.2",
+    "@types/mdast": "4.0.1",
+    "bun-types": "1.0.3"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "arg": "5.0.2",
+    "chalk-template": "1.1.0",
+    "remark-breaks": "4.0.0",
+    "remark-frontmatter": "5.0.0",
+    "remark-gfm": "4.0.0",
+    "remark-parse": "11.0.0",
+    "smol-toml": "1.1.2",
+    "unified": "11.0.3",
+    "unist-util-flat-filter": "2.0.0",
+    "unist-util-visit": "5.0.0",
+    "yaml": "2.3.2",
+    "zod": "3.22.2"
+  },
+  "scripts": {
+    "run": "bun run ./src/index.ts",
+    "test": "bun test",
+    "build": "bun build ./src/index.ts --compile --outfile markdot",
+    "check": "biome check .",
+    "check:fix": "biome check --apply-unsafe .",
+    "ci": "biome ci ."
   }
 }

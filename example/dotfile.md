@@ -38,15 +38,15 @@ ghq get https://github.com/shotanue/markdot
 
 ## setup-git
 
-```brewfile
+```brewfile --copy
 brew "git"
 ```
 
 ### setup-git-configs
 
-Copy the code block content to `~/.config/git/config`.
+Copy the code block content to `~/.config/git/config` with label `to:`.
 
-```gitconfig:~/.config/git/config
+```gitconfig ::to=~/.config/git/config 
 [init]
 defaultBranch = main
 
