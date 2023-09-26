@@ -174,3 +174,10 @@ dist
 # Finder (MacOS) folder config
 .DS_Store
 
+# for debug
+
+debug.md
+
+# bun
+*bun-build
+src/markdot
