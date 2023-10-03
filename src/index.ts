@@ -5,7 +5,6 @@ import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
-import { isArrayBuffer } from "util/types";
 import { executors, makeRunner } from "./makeRunner";
 import { makeTaskScheduler } from "./makeTaskScheduler";
 import { makeTransformer } from "./makeTransformer";
@@ -151,12 +150,12 @@ const ctx: Ctx = {
     const proc = Bun.spawnSync(command, {
       stdin: new TextEncoder().encode(stdin),
       stdout: "inherit", // redirect to parent's stdout
-      stderr: "pipe", // To throw Error with stderr text, set pipe.
+      stderr: "inherit",
       env: mergeEnv({ ...process.env }, { ...opt?.env }),
     });
 
     if (!proc.success) {
-      throw new Error(proc.stderr.toString());
+      throw Error("failed exec");
     }
   },
   exists: async ({ path }) => await Bun.file(path).exists(),
