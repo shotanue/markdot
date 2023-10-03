@@ -196,8 +196,10 @@ try {
   ctx.logger.success("finished.");
 } catch (obj) {
   if (obj instanceof Error) {
-    // ctx.logger.error(obj.name);
-    ctx.logger.error(obj.message);
+    ctx.logger.error("[error]");
+    ctx.logger.error(obj.message, { label: false });
+    ctx.logger.error("[trace]");
+    ctx.logger.error(obj.stack ?? "", { label: false });
   }
   process.exit(1);
 }
