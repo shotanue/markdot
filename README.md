@@ -1,24 +1,21 @@
-# *Mark*down *Dot*file
+# <ins>Mark</ins>down <ins>Dot</ins>file
 
-Markdown driven dotfile management.
-
-## How to use
-
-This package requires Bun.
-
-Todo: publish single compiled binary.
+## Installation
 
 ```bash
-bun run build
+brew install shotanue/tap/markdot
 ```
 
-`bun` generates binary to src/markdot.
-
-## help
-
-Run this command.
+## How to use
 
 ```bash
 markdot --help
 ```
+
+## Development
+
+### requirements
+
+- [bun.sh](https://bun.sh/)
+
 
