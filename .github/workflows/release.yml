@@ -12,10 +12,9 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
-            asset_name: markdot-x86_64-linux
-          # - os: macos-13-xlarge
-          #   asset_name: markdot-aarch64-darwin
-
+            asset_name: markdot-linux-amd64
+          - os: macos-13-xlarge
+            asset_name: markdot-darwin-arm64
 
     runs-on: ${{ matrix.os }}
 
@@ -28,6 +27,7 @@ jobs:
           bun-version: 1.0.3
 
       - run: bun install
+      - run: bun ci
       - run: bun run build
  
       - name: Upload binaries to release
