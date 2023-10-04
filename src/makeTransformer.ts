@@ -11,6 +11,7 @@ type MakeTransformer = (modules: {
   parser: {
     parse: (markdownText: string) => Root;
   };
+  preprocessor: (text: string) => string;
 }) => Transformer;
 
 const pickPreferences = (tree: Root) => {
@@ -81,9 +82,9 @@ const transformToTasks = (tree: Root) => {
 };
 
 export const makeTransformer: MakeTransformer =
-  ({ parser }) =>
+  ({ parser, preprocessor }) =>
   (input) => {
-    const mdast = parser.parse(input.markdownText);
+    const mdast = parser.parse(preprocessor(input.markdownText));
 
     const embedOtherMarkdownFiles = () => {
       visit(mdast, "image", (node, index, parent) => {

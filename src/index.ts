@@ -1,6 +1,8 @@
 import fs from "fs";
 import os from "os";
+import path from "path";
 import chalkTemplate from "chalk-template";
+import Mustache from "mustache";
 import remarkBreaks from "remark-breaks";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
@@ -10,7 +12,6 @@ import { executors, makeRunner } from "./makeRunner";
 import { makeTaskScheduler } from "./makeTaskScheduler";
 import { makeTransformer } from "./makeTransformer";
 import { parseArguments } from "./parseArguments";
-import path from "path";
 
 type Fragment = {
   depth: number;
@@ -111,45 +112,12 @@ const logger: Ctx["logger"] = {
 };
 const ctx: Ctx = {
   exec: async (command, stdin, opt) => {
-    const replaceEnvVars = (str: string, env: Record<string, string | undefined>): string => {
-      return str.replace(/\$([A-Z_][A-Z_0-9]*)/g, (_, varName) => env[varName] || `$${varName}`);
-    };
-
-    const mergeEnv = (
-      a: Record<string, string | undefined>,
-      b: Record<string, string | string[]>,
-    ): Record<string, string> => {
-      const result: Record<string, string> = {};
-
-      // Combine keys from both records
-      const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
-
-      for (const key of allKeys) {
-        if (a[key] && b[key]) {
-          const valueFromB = Array.isArray(b[key])
-            ? (b[key] as string[]).map((item) => replaceEnvVars(item, a)).join(":")
-            : replaceEnvVars(b[key] as string, a);
-
-          result[key] = `${a[key]}:${valueFromB}`;
-        } else if (a[key]) {
-          result[key] = a[key] ?? "";
-        } else {
-          const valueFromB = Array.isArray(b[key])
-            ? (b[key] as string[]).map((item) => replaceEnvVars(item, a)).join(":")
-            : replaceEnvVars(b[key] as string, a);
-
-          result[key] = valueFromB;
-        }
-      }
-      return result;
-    };
-
     logger.info(chalkTemplate`[command] {dim ${command.join(" ")}}`);
     const proc = Bun.spawnSync(command, {
       stdin: new TextEncoder().encode(stdin),
       stdout: "inherit", // redirect to parent's stdout
       stderr: "inherit",
-      env: mergeEnv({ ...process.env }, { ...opt?.env }),
+      env: getEnv(opt?.env),
     });
 
     if (!proc.success) {
@@ -179,7 +147,7 @@ const ctx: Ctx = {
           fs.mkdirSync(path.dirname(_path), { recursive: true });
         }
 
-        await Bun.write(file, args.input + "\n");
+        await Bun.write(file, `${args.input}\n`);
       },
       symlink: async ({ src, referer }) => {
         const symlinkDirection = `${referer} ==> ${src}`;
@@ -207,6 +175,21 @@ try {
   await markdot({
     transformer: makeTransformer({
       parser: unified().use(remarkParse).use(remarkBreaks).use(remarkFrontmatter, ["yaml", "toml"]).use(remarkGfm),
+      preprocessor: (text: string): string => {
+        return Mustache.render(text, {
+          platform: {
+            [process.platform]: process.platform,
+          },
+          username: {
+            [os.userInfo().username]: os.userInfo().username,
+          },
+          hostname: {
+            [os.hostname()]: os.hostname(),
+          },
+          env: { ...getEnv() },
+          ignore: false, // to ignore multiple codeblocks at once.
+        });
+      },
     }),
     taskScheduler: makeTaskScheduler(),
     runner: makeRunner({ executors, ctx }),
@@ -222,3 +205,40 @@ try {
   }
   process.exit(1);
 }
+
+const getEnv = (env?: Record<string, string | string[]>): Record<string, string> => {
+  const replaceEnvVars = (str: string, env: Record<string, string | undefined>): string => {
+    return str.replace(/\$([A-Z_][A-Z_0-9]*)/g, (_, varName) => env[varName] || `$${varName}`);
+  };
+
+  const mergeEnv = (
+    a: Record<string, string | undefined>,
+    b: Record<string, string | string[]>,
+  ): Record<string, string> => {
+    const result: Record<string, string> = {};
+
+    // Combine keys from both records
+    const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
+
+    for (const key of allKeys) {
+      if (a[key] && b[key]) {
+        const valueFromB = Array.isArray(b[key])
+          ? (b[key] as string[]).map((item) => replaceEnvVars(item, a)).join(":")
+          : replaceEnvVars(b[key] as string, a);
+
+        result[key] = `${a[key]}:${valueFromB}`;
+      } else if (a[key]) {
+        result[key] = a[key] ?? "";
+      } else {
+        const valueFromB = Array.isArray(b[key])
+          ? (b[key] as string[]).map((item) => replaceEnvVars(item, a)).join(":")
+          : replaceEnvVars(b[key] as string, a);
+
+        result[key] = valueFromB;
+      }
+    }
+    return result;
+  };
+
+  return mergeEnv({ ...process.env }, { ...env });
+};
