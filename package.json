@@ -25,7 +25,7 @@
     "unist-util-flat-filter": "2.0.0",
     "unist-util-visit": "5.0.0",
     "yaml": "2.3.2",
-    "zod": "3.22.2"
+    "zod": "3.22.4"
   },
   "scripts": {
     "run": "bun run ./src/index.ts",
