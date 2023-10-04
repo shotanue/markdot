@@ -36,25 +36,30 @@ export const executors = [
     doc: bashPage,
     matcher: (task) => task.kind === "codeblock" && task.lang.toLowerCase() === "bash",
     execute: async (task, { logger, exec, read, exists }, preferences) => {
-      if (task.kind !== "codeblock") {
-        throw new Error("invalid kind given");
-      }
-
-      if (task.code === "") {
-        logger.warn("ignored: empty lines.");
-      }
-      const { bash, env } = z
+      const { code } = z
         .object({
-          bash: z.object({
-            insertBefore: z.string().optional(),
-            insertAfter: z.string().optional(),
-          }),
-          env: z.record(z.string(), z.string().or(z.array(z.string()))).optional(),
+          kind: z.literal("codeblock"),
+          code: z.string(),
         })
-        .parse(preferences);
+        .parse(task);
 
-      const insertBefore = "insertBefore" in bash ? String(bash.insertBefore) : "";
-      const insertAfter = "insertAfter" in bash ? String(bash.insertAfter) : "";
+      if (code === "") {
+        logger.warn("ignored: empty lines.");
+        return;
+      }
+
+      const schema = z.object({
+        bash: z
+          .object({
+            insertBefore: z.string().default(""),
+            insertAfter: z.string().default(""),
+          })
+          .default({}),
+        env: z.record(z.string(), z.string().or(z.array(z.string()))).default({}),
+      });
+
+      const { bash, env } = schema.parse(preferences);
+
       const fetchFileOrElsePassThrough = async (maybePath: string): Promise<string> => {
         if (await exists({ path: maybePath })) {
           return await read({ path: maybePath });
@@ -64,9 +69,11 @@ export const executors = [
 
       return exec(
         ["bash"],
-        [await fetchFileOrElsePassThrough(insertBefore), task.code, await fetchFileOrElsePassThrough(insertAfter)].join(
-          "\n",
-        ),
+        [
+          await fetchFileOrElsePassThrough(bash.insertBefore),
+          code,
+          await fetchFileOrElsePassThrough(bash.insertAfter),
+        ].join("\n"),
         {
           env,
         },

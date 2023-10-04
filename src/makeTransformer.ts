@@ -14,11 +14,7 @@ type MakeTransformer = (modules: {
 }) => Transformer;
 
 const pickPreferences = (tree: Root) => {
-  const defaultValue = {
-    hyperlink: {
-      type: "symlink",
-    },
-  } as const;
+  const defaultValue = {};
 
   const parser = {
     yaml: (value: string): Record<string, unknown> => {

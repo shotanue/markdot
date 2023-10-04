@@ -37,11 +37,7 @@ export type Task =
     };
 
 type Tasks = {
-  preferences: {
-    hyperlink: {
-      type: "symlink" | "copy";
-    };
-  };
+  preferences: Record<string, unknown>;
   list: Task[];
 };
 
@@ -53,7 +49,7 @@ export type Ctx = {
     error: Log;
     success: Log;
   };
-  exec: (command: string[], stdin: string, opt?: { env?: Record<string, string | string[]> }) => Promise<void>;
+  exec: (command: string[], stdin: string, opt?: { env: Record<string, string | string[]> }) => Promise<void>;
   exists: (args: { path: string }) => Promise<boolean>;
   read: (args: { path: string }) => Promise<string>;
   write: (args: { path: string; input: string }) => Promise<void>;
