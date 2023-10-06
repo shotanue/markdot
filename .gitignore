@@ -181,3 +181,4 @@ debug*
 # bun
 *bun-build
 src/markdot
+bun.lockb
