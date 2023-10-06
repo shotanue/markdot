@@ -36,15 +36,20 @@ export const executors = [
     doc: bashPage,
     matcher: (task) => task.kind === "codeblock" && task.lang.toLowerCase() === "bash",
     execute: async (task, { logger, exec, read, exists }, preferences) => {
-      const { code } = z
-        .object({
-          kind: z.literal("codeblock"),
-          code: z.string(),
-        })
-        .parse(task);
+      z.object({
+        kind: z.literal("codeblock"),
+        code: z.string(),
+      }).parse(task);
 
-      if (code === "") {
+      if (task.kind !== "codeblock") {
+        throw new Error("task.kind should be codeblock.");
+      }
+      if (task.code === "") {
         logger.warn("ignored: empty lines.");
+        return;
+      }
+      if ("::to" in task.meta) {
+        logger.info("skipped due to bash codeblock with ::to");
         return;
       }
 
@@ -71,7 +76,7 @@ export const executors = [
         ["bash"],
         [
           await fetchFileOrElsePassThrough(bash.insertBefore),
-          code,
+          task.code,
           await fetchFileOrElsePassThrough(bash.insertAfter),
         ].join("\n"),
         {
@@ -100,12 +105,14 @@ export const executors = [
     kind: "tag",
     doc: toPage,
     matcher: (task) => task.kind === "codeblock" && "::to" in task.meta,
-    execute: async (task, { write }) => {
+    execute: async (task, { write, logger }) => {
       if (task.kind !== "codeblock") {
         throw new Error("invalid kind given");
       }
       const path = task.meta["::to"];
+      logger.info(`Trying to write file. path:${path}`);
       await write({ path, input: task.code });
+      logger.success(`Success writing. path:${path}`);
     },
   },
   {
