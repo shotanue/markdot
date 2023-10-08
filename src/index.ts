@@ -1,7 +1,4 @@
-import fs from "fs";
 import os from "os";
-import path from "path";
-import chalkTemplate from "chalk-template";
 import Mustache from "mustache";
 import remarkBreaks from "remark-breaks";
 import remarkFrontmatter from "remark-frontmatter";
@@ -12,6 +9,10 @@ import { executors, makeRunner } from "./makeRunner";
 import { makeTaskScheduler } from "./makeTaskScheduler";
 import { makeTransformer } from "./makeTransformer";
 import { parseArguments } from "./parseArguments";
+import { getEnv } from "./getEnv";
+import { logger } from "./logger";
+import { makeFsAdapter } from "./makeFsAdapter";
+import { makeOsAdapter } from "./makeOsAdapter";
 
 type Fragment = {
   depth: number;
@@ -44,51 +45,16 @@ type Tasks = {
   list: Task[];
 };
 
-const getEnv = (env?: Record<string, string | string[]>): Record<string, string> => {
-  const replaceEnvVars = (str: string, env: Record<string, string | undefined>): string => {
-    return str.replace(/\$([A-Z_][A-Z_0-9]*)/g, (_, varName) => env[varName] || `$${varName}`);
-  };
-
-  const mergeEnv = (
-    a: Record<string, string | undefined>,
-    b: Record<string, string | string[]>,
-  ): Record<string, string> => {
-    const result: Record<string, string> = {};
-
-    // Combine keys from both records
-    const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
-
-    for (const key of allKeys) {
-      if (a[key] && b[key]) {
-        const valueFromB = Array.isArray(b[key])
-          ? (b[key] as string[]).map((item) => replaceEnvVars(item, a)).join(":")
-          : replaceEnvVars(b[key] as string, a);
-
-        result[key] = `${a[key]}:${valueFromB}`;
-      } else if (a[key]) {
-        result[key] = a[key] ?? "";
-      } else {
-        const valueFromB = Array.isArray(b[key])
-          ? (b[key] as string[]).map((item) => replaceEnvVars(item, a)).join(":")
-          : replaceEnvVars(b[key] as string, a);
-
-        result[key] = valueFromB;
-      }
-    }
-    return result;
-  };
-
-  return mergeEnv({ ...process.env }, { ...env });
+type Log = (message: string, options?: { label: boolean }) => void;
+type Logger<T extends Log = Log> = {
+  info: T;
+  warn: T;
+  error: T;
+  success: T;
 };
 
-type Log = (message: string, options?: { label: boolean }) => void;
 export type Ctx = {
-  logger: {
-    info: Log;
-    warn: Log;
-    error: Log;
-    success: Log;
-  };
+  logger: Logger;
   exec: (command: string[], stdin: string, opt?: { env: Record<string, string | string[]> }) => Promise<void>;
   exists: (args: { path: string }) => Promise<boolean>;
   read: (args: { path: string }) => Promise<string>;
@@ -133,71 +99,9 @@ const markdot =
     return await runner(tasks);
   };
 
-const logger: Ctx["logger"] = {
-  info: (message, { label } = { label: true }) => {
-    console.info(`${label ? "[markdot]" : ""} ${message}`);
-  },
-  warn: (message, { label } = { label: true }) => {
-    console.warn(chalkTemplate`{yellow ${label ? "[markdot]" : ""} ${message}}`);
-  },
-  error: (message, { label } = { label: true }) => {
-    console.error(`${label ? "[markdot]" : ""} ${message}`);
-  },
-  success: (message, { label } = { label: true }) => {
-    console.log(chalkTemplate`{green ${label ? "[markdot]" : ""} ${message}}`);
-  },
-};
 const ctx: Ctx = {
-  exec: async (command, stdin, opt) => {
-    logger.info(chalkTemplate`[command] {dim ${command.join(" ")}}`);
-    const proc = Bun.spawnSync(command, {
-      stdin: new TextEncoder().encode(stdin),
-      stdout: "inherit", // redirect to parent's stdout
-      stderr: "inherit",
-      env: getEnv(opt?.env),
-    });
-
-    if (!proc.success) {
-      throw Error("failed exec");
-    }
-  },
-  ...(() => {
-    const resolveTilde = (filePath: string): string => {
-      if (filePath[0] === "~") {
-        return path.join(os.homedir(), filePath.slice(1));
-      }
-      return filePath;
-    };
-
-    return {
-      exists: async (args) => {
-        return await Bun.file(resolveTilde(args.path)).exists();
-      },
-      read: async (args) => {
-        return await Bun.file(resolveTilde(args.path)).text();
-      },
-      write: async (args) => {
-        const _path = resolveTilde(args.path);
-        const file = Bun.file(_path);
-        if (!(await file.exists())) {
-          // Ensure directory exists before writing
-          fs.mkdirSync(path.dirname(_path), { recursive: true });
-        }
-
-        await Bun.write(file, `${args.input}\n`);
-      },
-      symlink: async ({ src, referer }) => {
-        const symlinkDirection = `${referer} ==> ${src}`;
-        if (await Bun.file(referer).exists()) {
-          logger.info(`skip to create symlink. ${symlinkDirection}`);
-          return;
-        }
-        fs.symlinkSync(src, referer);
-        logger.success(`created symlink. ${symlinkDirection}`);
-      },
-    };
-  })(),
-
+  ...makeOsAdapter(),
+  ...makeFsAdapter(),
   logger,
 };
 
