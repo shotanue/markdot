@@ -21,21 +21,13 @@ export type Input = {
   fragments: string[];
 };
 
-export type Task =
-  | {
-      kind: "codeblock";
-      lang: string;
-      meta: Record<string, string>;
-      code: string;
-      fragments: Fragment[];
-    }
-  | {
-      kind: "hyperlink";
-      referer: string;
-      src: string;
-      type: "copy" | "symlink";
-      fragments: Fragment[];
-    };
+export type Task = {
+  kind: "codeblock";
+  lang: string;
+  meta: Record<string, string>;
+  code: string;
+  fragments: Fragment[];
+};
 
 type Tasks = {
   preferences: Record<string, unknown>;

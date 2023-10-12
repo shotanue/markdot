@@ -65,19 +65,6 @@ const transformToTasks = (tree: Root) => {
         fragments: [...fragmentBuffer],
       });
     }
-    if (node.type === "link") {
-      const referer = node.children[0].type === "text" ? node.children[0].value : "";
-      if (referer === "") {
-        throw new Error("hyperlink: referer should be text node and length must be more than 0");
-      }
-      list.push({
-        kind: "hyperlink",
-        referer: referer,
-        src: node.url,
-        type: "symlink",
-        fragments: [...fragmentBuffer],
-      });
-    }
   }
   return list;
 };
@@ -101,17 +88,6 @@ const preprocessor = (text: string, meta: Ctx["meta"], env: Ctx["env"]): string 
 
 export const makeTransformer: MakeTransformer = (ctx: Pick<Ctx, "meta" | "env">) => (input) => {
   const mdast = parser.parse(preprocessor(input.markdownText, ctx.meta, ctx.env));
-
-  const embedOtherMarkdownFiles = () => {
-    visit(mdast, "image", (node, index, parent) => {
-      const text = readFileSync(node.url).toString();
-      if (parent && index !== undefined && "children" in parent) {
-        parent.children.splice(index, 1, ...parser.parse(text).children);
-      }
-    });
-  };
-
-  embedOtherMarkdownFiles();
 
   const newTree = flatFilter<Root>(mdast, (node) => ["code", "link", "heading", "yaml", "toml"].includes(node.type));
   if (newTree === null) {
