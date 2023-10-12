@@ -1,15 +1,15 @@
 import os from "os";
-import { executors, makeRunner } from "./makeRunner";
-import { makeTaskScheduler } from "./makeTaskScheduler";
-import { makeTransformer } from "./makeTransformer";
-import { helpText, parseArguments } from "./parseArguments";
+import { adapter } from "./adapter";
+import { executors } from "./executors";
 import { getEnv } from "./getEnv";
+import { helpText } from "./helpText";
 import { logger } from "./logger";
-import { makeFsAdapter } from "./makeFsAdapter";
-import { makeOsAdapter } from "./makeOsAdapter";
-import { markdot } from "./markdot";
+import { makeTransformer } from "./makeTransformer";
+import { parseArguments } from "./parseArguments";
 
 import aboutPage from "@resources/about.md";
+import { getStdin } from "./getStdin";
+import { makeMarkdot } from "./makeMarkdot";
 
 type Fragment = {
   depth: number;
@@ -27,6 +27,7 @@ export type Task = {
   meta: Record<string, string>;
   code: string;
   fragments: Fragment[];
+  breadcrumb: string;
 };
 
 type Tasks = {
@@ -45,10 +46,9 @@ type Logger<T extends Log = Log> = {
 export type Ctx = {
   logger: Logger;
   exec: (command: string[], stdin: string, opt?: { env: Record<string, string | string[]> }) => Promise<void>;
-  exists: (args: { path: string }) => Promise<boolean>;
-  read: (args: { path: string }) => Promise<string>;
-  write: (args: { path: string; input: string }) => Promise<void>;
-  symlink: (args: { src: string; referer: string }) => Promise<void>;
+  exists: (path: string) => Promise<boolean>;
+  read: (path: string) => Promise<string>;
+  write: (filePath: string, input: string) => Promise<void>;
   env: Record<string, string>;
   meta: {
     platform: string;
@@ -57,11 +57,12 @@ export type Ctx = {
   };
 };
 
+const env = getEnv();
+
 const ctx: Ctx = {
-  ...makeOsAdapter(),
-  ...makeFsAdapter(),
+  ...adapter(env),
   logger,
-  env: getEnv(),
+  env,
   meta: {
     hostname: os.hostname(),
     platform: os.arch(),
@@ -85,18 +86,22 @@ parse markdown text
 */
 export type ParseArguments = (
   argv: string[],
+  stdin: string,
 ) => Promise<
-  | { kind: "input"; input: Input }
+  | { kind: "stdin"; text: string; fragments: string[] }
+  | { kind: "file"; path: string; fragments: string[] }
   | { kind: "help" }
   | { kind: "doc"; resource: string }
   | { kind: "exit"; message: string }
 >;
 export type Transformer = (input: Input) => Tasks;
-export type TaskScheduler = (markdot: Tasks, filterFragments: Input["fragments"]) => Tasks;
 export type Runner = (tasks: Tasks) => Promise<void>;
 
 try {
-  const result = await parseArguments(process.argv.slice(2));
+  const result = await parseArguments(
+    process.argv.slice(2),
+    await getStdin(process.stdin.isTTY, () => Bun.stdin.stream()),
+  );
 
   if (result.kind === "help") {
     ctx.logger.info(helpText(executors), { label: false });
@@ -108,8 +113,8 @@ try {
       result.resource === "about" ? aboutPage : executors.find((x) => x.name === result.resource)?.doc ?? undefined;
 
     if (resource === undefined) {
-      ctx.logger.error("resource not found. doc: " + resource);
-      process.exit(1);
+      ctx.logger.error(`resource not found. doc: ${resource}`);
+      process.exit(2);
     }
 
     ctx.logger.info(await Bun.file(resource).text(), { label: false });
@@ -118,16 +123,20 @@ try {
 
   if (result.kind === "exit") {
     ctx.logger.info(result.message, { label: false });
-    process.exit(2);
+    process.exit(1);
   }
 
-  await markdot({
-    transformer: makeTransformer(ctx),
-    taskScheduler: makeTaskScheduler(),
-    runner: makeRunner({ executors, ctx }),
-  })(result.input);
+  const text = result.kind === "stdin" ? result.text : await Bun.file(result.path).text();
 
-  ctx.logger.success("finished.");
+  const markdot = makeMarkdot({
+    ctx,
+    transformer: makeTransformer(ctx),
+    executors,
+  });
+
+  await markdot(text, { fragments: result.fragments });
+
+  ctx.logger.success("done");
 } catch (obj) {
   if (obj instanceof Error) {
     ctx.logger.error("[error]");

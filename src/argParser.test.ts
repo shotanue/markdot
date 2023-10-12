@@ -1,5 +1,5 @@
 import { argParser } from "./argParser";
-import { describe, expect, it, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 
 describe("argParser", () => {
   describe("ignores arguments with unknown prefix", () => {
