@@ -4,15 +4,16 @@ import * as TOML from "smol-toml";
 import flatFilter from "unist-util-flat-filter";
 import { visit } from "unist-util-visit";
 import YAML from "yaml";
-import { Task, Transformer } from ".";
+import { Ctx, Task, Transformer } from ".";
 import { argParser } from "./argParser";
+import { unified } from "unified";
+import remarkParse from "remark-parse";
+import remarkBreaks from "remark-breaks";
+import remarkFrontmatter from "remark-frontmatter";
+import remarkGfm from "remark-gfm";
+import Mustache from "mustache";
 
-type MakeTransformer = (modules: {
-  parser: {
-    parse: (markdownText: string) => Root;
-  };
-  preprocessor: (text: string) => string;
-}) => Transformer;
+type MakeTransformer = (ctx: Ctx) => Transformer;
 
 const pickPreferences = (tree: Root) => {
   const defaultValue = {};
@@ -81,29 +82,44 @@ const transformToTasks = (tree: Root) => {
   return list;
 };
 
-export const makeTransformer: MakeTransformer =
-  ({ parser, preprocessor }) =>
-  (input) => {
-    const mdast = parser.parse(preprocessor(input.markdownText));
+const parser = unified().use(remarkParse).use(remarkBreaks).use(remarkFrontmatter, ["yaml", "toml"]).use(remarkGfm);
+const preprocessor = (text: string, meta: Ctx["meta"], env: Ctx["env"]): string => {
+  return Mustache.render(text, {
+    platform: {
+      [meta.platform]: meta.platform,
+    },
+    username: {
+      [meta.username]: meta.username,
+    },
+    hostname: {
+      [meta.hostname]: meta.hostname,
+    },
+    env: { ...env },
+    ignore: false, // to ignore multiple codeblocks at once.
+  });
+};
 
-    const embedOtherMarkdownFiles = () => {
-      visit(mdast, "image", (node, index, parent) => {
-        const text = readFileSync(node.url).toString();
-        if (parent && index !== undefined && "children" in parent) {
-          parent.children.splice(index, 1, ...parser.parse(text).children);
-        }
-      });
-    };
+export const makeTransformer: MakeTransformer = (ctx: Pick<Ctx, "meta" | "env">) => (input) => {
+  const mdast = parser.parse(preprocessor(input.markdownText, ctx.meta, ctx.env));
 
-    embedOtherMarkdownFiles();
-
-    const newTree = flatFilter<Root>(mdast, (node) => ["code", "link", "heading", "yaml", "toml"].includes(node.type));
-    if (newTree === null) {
-      throw new Error("tree is null");
-    }
-
-    return {
-      preferences: pickPreferences(newTree),
-      list: transformToTasks(newTree),
-    };
+  const embedOtherMarkdownFiles = () => {
+    visit(mdast, "image", (node, index, parent) => {
+      const text = readFileSync(node.url).toString();
+      if (parent && index !== undefined && "children" in parent) {
+        parent.children.splice(index, 1, ...parser.parse(text).children);
+      }
+    });
   };
+
+  embedOtherMarkdownFiles();
+
+  const newTree = flatFilter<Root>(mdast, (node) => ["code", "link", "heading", "yaml", "toml"].includes(node.type));
+  if (newTree === null) {
+    throw new Error("tree is null");
+  }
+
+  return {
+    preferences: pickPreferences(newTree),
+    list: transformToTasks(newTree),
+  };
+};

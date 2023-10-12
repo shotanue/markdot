@@ -1,25 +1,22 @@
 import os from "os";
-import Mustache from "mustache";
-import remarkBreaks from "remark-breaks";
-import remarkFrontmatter from "remark-frontmatter";
-import remarkGfm from "remark-gfm";
-import remarkParse from "remark-parse";
-import { unified } from "unified";
 import { executors, makeRunner } from "./makeRunner";
 import { makeTaskScheduler } from "./makeTaskScheduler";
 import { makeTransformer } from "./makeTransformer";
-import { parseArguments } from "./parseArguments";
+import { helpText, parseArguments } from "./parseArguments";
 import { getEnv } from "./getEnv";
 import { logger } from "./logger";
 import { makeFsAdapter } from "./makeFsAdapter";
 import { makeOsAdapter } from "./makeOsAdapter";
+import { markdot } from "./markdot";
+
+import aboutPage from "@resources/about.md";
 
 type Fragment = {
   depth: number;
   text: string;
 };
 
-type Input = {
+export type Input = {
   markdownText: string; // from: file|stdin
   fragments: string[];
 };
@@ -60,7 +57,26 @@ export type Ctx = {
   read: (args: { path: string }) => Promise<string>;
   write: (args: { path: string; input: string }) => Promise<void>;
   symlink: (args: { src: string; referer: string }) => Promise<void>;
+  env: Record<string, string>;
+  meta: {
+    platform: string;
+    username: string;
+    hostname: string;
+  };
 };
+
+const ctx: Ctx = {
+  ...makeOsAdapter(),
+  ...makeFsAdapter(),
+  logger,
+  env: getEnv(),
+  meta: {
+    hostname: os.hostname(),
+    platform: os.arch(),
+    username: os.userInfo().username,
+  },
+};
+
 export type Executor = {
   name: string;
   kind: "lang" | "tag" | "markup";
@@ -77,36 +93,36 @@ parse markdown text
 */
 export type ParseArguments = (
   argv: string[],
-  executors: Executor[],
-) => Promise<{ kind: "input"; input: Input } | { kind: "exit"; message: string }>;
+) => Promise<
+  | { kind: "input"; input: Input }
+  | { kind: "help" }
+  | { kind: "doc"; resource: string }
+  | { kind: "exit"; message: string }
+>;
 export type Transformer = (input: Input) => Tasks;
 export type TaskScheduler = (markdot: Tasks, filterFragments: Input["fragments"]) => Tasks;
 export type Runner = (tasks: Tasks) => Promise<void>;
 
-const markdot =
-  ({
-    transformer,
-    taskScheduler,
-    runner,
-  }: {
-    transformer: Transformer;
-    taskScheduler: TaskScheduler;
-    runner: Runner;
-  }) =>
-  async (input: Input): ReturnType<Runner> => {
-    const [tasks] = [input].map(transformer).map((tasks) => taskScheduler(tasks, input.fragments));
-
-    return await runner(tasks);
-  };
-
-const ctx: Ctx = {
-  ...makeOsAdapter(),
-  ...makeFsAdapter(),
-  logger,
-};
-
 try {
-  const result = await parseArguments(process.argv.slice(2), executors);
+  const result = await parseArguments(process.argv.slice(2));
+
+  if (result.kind === "help") {
+    ctx.logger.info(helpText(executors), { label: false });
+    process.exit(2);
+  }
+
+  if (result.kind === "doc") {
+    const resource =
+      result.resource === "about" ? aboutPage : executors.find((x) => x.name === result.resource)?.doc ?? undefined;
+
+    if (resource === undefined) {
+      ctx.logger.error("resource not found. doc: " + resource);
+      process.exit(1);
+    }
+
+    ctx.logger.info(await Bun.file(resource).text(), { label: false });
+    process.exit(2);
+  }
 
   if (result.kind === "exit") {
     ctx.logger.info(result.message, { label: false });
@@ -114,24 +130,7 @@ try {
   }
 
   await markdot({
-    transformer: makeTransformer({
-      parser: unified().use(remarkParse).use(remarkBreaks).use(remarkFrontmatter, ["yaml", "toml"]).use(remarkGfm),
-      preprocessor: (text: string): string => {
-        return Mustache.render(text, {
-          platform: {
-            [process.platform]: process.platform,
-          },
-          username: {
-            [os.userInfo().username]: os.userInfo().username,
-          },
-          hostname: {
-            [os.hostname()]: os.hostname(),
-          },
-          env: { ...getEnv() },
-          ignore: false, // to ignore multiple codeblocks at once.
-        });
-      },
-    }),
+    transformer: makeTransformer(ctx),
     taskScheduler: makeTaskScheduler(),
     runner: makeRunner({ executors, ctx }),
   })(result.input);
