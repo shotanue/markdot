@@ -1,32 +1,8 @@
 import bashPage from "@resources/langs/bash.md";
 import brewfilePage from "@resources/langs/brewfile.md";
 import toPage from "@resources/tags/to.md";
-import chalkTemplate from "chalk-template";
 import { z } from "zod";
-import { Ctx, Executor, Runner } from ".";
-
-type MakeRunner = (args: {
-  executors: Executor[];
-  ctx: Ctx;
-}) => Runner;
-
-export const makeRunner: MakeRunner =
-  ({ executors, ctx }) =>
-  async (tasks) => {
-    for (const task of tasks.list) {
-      const breadcrumb = task.fragments.map((x) => `${"#".repeat(x.depth)} ${x.text}`).join(" > ");
-      for (const { execute } of executors.filter((executor) => executor.matcher(task))) {
-        if (task.kind === "codeblock" && "::ignore" in task.meta) {
-          ctx.logger.info(chalkTemplate`{bold ${breadcrumb}} ::ignore`);
-          continue;
-        } else {
-          ctx.logger.info(chalkTemplate`{bold ${breadcrumb}}`);
-        }
-
-        await execute(task, ctx, tasks.preferences);
-      }
-    }
-  };
+import { Executor } from ".";
 
 export const executors = [
   {

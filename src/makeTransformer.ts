@@ -1,23 +1,19 @@
-import { readFileSync } from "fs";
 import { Root } from "mdast";
-import * as TOML from "smol-toml";
-import flatFilter from "unist-util-flat-filter";
-import { visit } from "unist-util-visit";
-import YAML from "yaml";
-import { Ctx, Task, Transformer } from ".";
-import { argParser } from "./argParser";
-import { unified } from "unified";
-import remarkParse from "remark-parse";
+import Mustache from "mustache";
 import remarkBreaks from "remark-breaks";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
-import Mustache from "mustache";
+import remarkParse from "remark-parse";
+import * as TOML from "smol-toml";
+import { unified } from "unified";
+import flatFilter from "unist-util-flat-filter";
+import YAML from "yaml";
+import { Ctx, Task, Transformer } from ".";
+import { argParser } from "./argParser";
 
-type MakeTransformer = (ctx: Ctx) => Transformer;
+type MakeTransformer = (ctx: Pick<Ctx, "env" | "meta">) => Transformer;
 
 const pickPreferences = (tree: Root) => {
-  const defaultValue = {};
-
   const parser = {
     yaml: (value: string): Record<string, unknown> => {
       return YAML.parse(value);
@@ -31,13 +27,13 @@ const pickPreferences = (tree: Root) => {
   const nodeType = node.type as "yaml" | "node" | string;
 
   if (nodeType === "yaml" || nodeType === "toml") {
-    return { ...defaultValue, ...parser[nodeType]("value" in node ? node.value : "") };
+    return { ...parser[nodeType]("value" in node ? node.value : "") };
   }
 
-  return defaultValue;
+  return {};
 };
 
-const transformToTasks = (tree: Root) => {
+const treeToTasks = (tree: Root) => {
   const fragmentBuffer = [];
   const list: Task[] = [];
   for (const node of tree.children ?? []) {
@@ -49,7 +45,11 @@ const transformToTasks = (tree: Root) => {
 
       if (fragmentBuffer.length === 0) {
         fragmentBuffer.push(fragment);
-      } else if (fragmentBuffer[fragmentBuffer.length - 1].depth >= node.depth) {
+      } else if (fragmentBuffer[fragmentBuffer.length - 1].depth === node.depth) {
+        fragmentBuffer.pop();
+        fragmentBuffer.push(fragment);
+      } else if (fragmentBuffer[fragmentBuffer.length - 1].depth > node.depth) {
+        fragmentBuffer.pop();
         fragmentBuffer.pop();
         fragmentBuffer.push(fragment);
       } else if (fragmentBuffer[fragmentBuffer.length - 1].depth < node.depth) {
@@ -57,12 +57,14 @@ const transformToTasks = (tree: Root) => {
       }
     }
     if (node.type === "code") {
+      const fragments = [...fragmentBuffer];
       list.push({
         kind: "codeblock",
         lang: node.lang ?? "",
         meta: argParser(node.meta ?? ""),
         code: node.value ?? "",
-        fragments: [...fragmentBuffer],
+        fragments,
+        breadcrumb: fragments.map((x) => `${"#".repeat(x.depth)} ${x.text}`).join(" > "),
       });
     }
   }
@@ -86,16 +88,41 @@ const preprocessor = (text: string, meta: Ctx["meta"], env: Ctx["env"]): string 
   });
 };
 
-export const makeTransformer: MakeTransformer = (ctx: Pick<Ctx, "meta" | "env">) => (input) => {
+/*
+Parsing markdown text into tree, applying some filters, and making internal data structure.
+*/
+export const makeTransformer: MakeTransformer = (ctx) => (input) => {
   const mdast = parser.parse(preprocessor(input.markdownText, ctx.meta, ctx.env));
 
-  const newTree = flatFilter<Root>(mdast, (node) => ["code", "link", "heading", "yaml", "toml"].includes(node.type));
-  if (newTree === null) {
+  const flattenTree = flatFilter<Root>(mdast, (node) => ["code", "heading", "yaml", "toml"].includes(node.type));
+
+  if (flattenTree === null) {
     throw new Error("tree is null");
   }
 
+  const filterByFragments = (task: Task): boolean => {
+    if (input.fragments.length === 0) {
+      return true;
+    }
+    for (const fragment of input.fragments) {
+      if (task.fragments.find((x) => x.text === fragment)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  const excludeCodeblockWithIgnore = (task: Task): boolean => {
+    if (task.kind === "codeblock" && "::ignore" in task.meta) {
+      return false;
+    } else {
+      return true;
+    }
+  };
+
   return {
-    preferences: pickPreferences(newTree),
-    list: transformToTasks(newTree),
+    preferences: pickPreferences(flattenTree),
+    list: treeToTasks(flattenTree).filter(filterByFragments).filter(excludeCodeblockWithIgnore),
   };
 };
