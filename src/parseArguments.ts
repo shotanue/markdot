@@ -1,37 +1,10 @@
 import aboutPage from "@resources/about.md";
 import arg from "arg";
 import chalkTemplate from "chalk-template";
-import { ParseArguments } from ".";
+import { Executor, ParseArguments } from ".";
 
-export const parseArguments: ParseArguments = async (argv, executors) => {
-  const args = arg(
-    {
-      "--help": Boolean,
-      "-h": "--help",
-      "--doc": String,
-      "--fragment": [String],
-      "--file": String,
-    },
-    { argv },
-  );
-
-  const stdin = await (async (): Promise<string> => {
-    if (!process.stdin.isTTY) {
-      let text = "";
-      for await (const chunk of Bun.stdin.stream()) {
-        const chunkText = Buffer.from(chunk).toString();
-        text = `${text}${chunkText}`;
-      }
-      return text;
-    }
-
-    return "";
-  })();
-
-  if (stdin === "" && (argv.length === 0 || args["--help"])) {
-    return {
-      kind: "exit",
-      message: chalkTemplate`{bold # MarkDot}
+export const helpText = (executors: Executor[]): string => {
+  return chalkTemplate`{bold # MarkDot}
 
         {red Mark}down {red Dot}file.
 
@@ -67,20 +40,46 @@ ${executors
   .filter((x) => x.kind === "tag")
   .map((x) => `markdot --doc ${x.name}`)
   .join("\n")}
-`,
+`;
+};
+
+export const parseArguments: ParseArguments = async (argv) => {
+  const args = arg(
+    {
+      "--help": Boolean,
+      "-h": "--help",
+      "--doc": String,
+      "--fragment": [String],
+      "--file": String,
+    },
+    { argv },
+  );
+
+  const stdin = await (async (): Promise<string> => {
+    if (!process.stdin.isTTY) {
+      let text = "";
+      for await (const chunk of Bun.stdin.stream()) {
+        const chunkText = Buffer.from(chunk).toString();
+        text = `${text}${chunkText}`;
+      }
+      return text;
+    }
+
+    return "";
+  })();
+
+  if (stdin === "" && (argv.length === 0 || args["--help"])) {
+    return {
+      kind: "help",
     };
   }
 
   if (args["--doc"]) {
-    const resource =
-      args["--doc"] === "about" ? aboutPage : executors.find((x) => x.name === args["--doc"])?.doc ?? undefined;
-    if (resource === undefined) {
-      throw Error("resource not found. ");
-    }
-
     return {
-      kind: "exit",
-      message: await Bun.file(resource).text(),
+      kind: "doc",
+      resource: args["--doc"],
+
+      // resource: await Bun.file(resource).text(),
     };
   }
 
