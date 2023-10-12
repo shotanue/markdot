@@ -1,6 +1,5 @@
 import bashPage from "@resources/langs/bash.md";
 import brewfilePage from "@resources/langs/brewfile.md";
-import hyperlinkPage from "@resources/markups/hyperlink.md";
 import toPage from "@resources/tags/to.md";
 import chalkTemplate from "chalk-template";
 import { z } from "zod";
@@ -113,25 +112,6 @@ export const executors = [
       logger.info(`Trying to write file. path:${path}`);
       await write({ path, input: task.code });
       logger.success(`Success writing. path:${path}`);
-    },
-  },
-  {
-    name: "hyperlink",
-    kind: "markup",
-    doc: hyperlinkPage,
-    matcher: (task) => task.kind === "hyperlink",
-    execute: async (task, { symlink, read, write }) => {
-      if (task.kind !== "hyperlink") {
-        throw new Error("invalid kind given");
-      }
-
-      if (task.type === "symlink") {
-        await symlink({ src: task.src, referer: task.referer });
-      }
-
-      if (task.type === "copy") {
-        await write({ path: task.referer, input: await read({ path: task.src }) });
-      }
     },
   },
 ] satisfies Executor[];

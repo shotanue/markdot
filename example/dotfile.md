@@ -1,8 +1,3 @@
----
-# preferences
-hyperlink:
- type: symlink # default link type. default: symlink; options: symlink|copy;
----
 # dotfile
 
 This is the sample markdown file. Markdot ignores this text.
@@ -54,26 +49,4 @@ defaultBranch = main
 [includeIf "gitdir:~/ghq/github.com/"]
 path = ~/.config/git/override.github.gitconfig
 ```
-
-Create symlink `~/.config/git/config`, refers to `./packages/git/config`.
-
-[~/.config/git/override.github.gitconfig](packages/git/config/override.github.gitconfig?type=symlink)
-
-Copying not symlink:
-
-[~/.config/git/override.github.gitconfig](packages/git/config/override.github.gitconfig?type=copy)
-
-You can omit `type=symlink`. Markdot creates symlink in default. Preferences in frontmatter can change the default behavior. 
-
-[~/.config/git/override.github.gitconfig](packages/git/config/override.github.gitconfig)
-
-## setup-editor
-
-Embedding other markdown dotfile: In this section, Markdot executes all of the tasks immediately.
-
-![install-editors](./editors.md)
-
-Embedding supports fragment.
-
-![install-helix](./editors.md#install-helix)
 
