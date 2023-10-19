@@ -1,5 +1,4 @@
 import { Root } from "mdast";
-import Mustache from "mustache";
 import remarkBreaks from "remark-breaks";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
@@ -10,6 +9,7 @@ import flatFilter from "unist-util-flat-filter";
 import YAML from "yaml";
 import { Ctx, Task, Transformer } from ".";
 import { argParser } from "./argParser";
+import { preprocessor } from "./preprocessor";
 
 type MakeTransformer = (ctx: Pick<Ctx, "env" | "meta">) => Transformer;
 
@@ -72,22 +72,6 @@ const treeToTasks = (tree: Root) => {
 };
 
 const parser = unified().use(remarkParse).use(remarkBreaks).use(remarkFrontmatter, ["yaml", "toml"]).use(remarkGfm);
-const preprocessor = (text: string, meta: Ctx["meta"], env: Ctx["env"]): string => {
-  return Mustache.render(text, {
-    platform: {
-      [meta.platform]: meta.platform,
-    },
-    username: {
-      [meta.username]: meta.username,
-    },
-    hostname: {
-      [meta.hostname]: meta.hostname,
-    },
-    env: { ...env },
-    ignore: false, // to ignore multiple codeblocks at once.
-  });
-};
-
 /*
 Parsing markdown text into tree, applying some filters, and making internal data structure.
 */
