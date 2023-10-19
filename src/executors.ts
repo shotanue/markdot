@@ -41,8 +41,8 @@ export const executors = [
       const { bash, env } = schema.parse(preferences);
 
       const fetchFileOrElsePassThrough = async (maybePath: string): Promise<string> => {
-        if (await exists({ path: maybePath })) {
-          return await read({ path: maybePath });
+        if (await exists(maybePath)) {
+          return await read(maybePath);
         }
         return maybePath;
       };
@@ -86,7 +86,7 @@ export const executors = [
       }
       const path = task.meta["::to"];
       logger.info(`Trying to write file. path:${path}`);
-      await write({ path, input: task.code });
+      await write(path, task.code);
       logger.success(`Success writing. path:${path}`);
     },
   },
