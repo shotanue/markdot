@@ -22,7 +22,7 @@
     "remark-frontmatter": "5.0.0",
     "remark-gfm": "4.0.0",
     "remark-parse": "11.0.0",
-    "smol-toml": "1.1.2",
+    "smol-toml": "1.1.3",
     "unified": "11.0.3",
     "unist-util-flat-filter": "2.0.0",
     "unist-util-visit": "5.0.0",
