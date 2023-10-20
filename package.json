@@ -26,7 +26,7 @@
     "unified": "11.0.3",
     "unist-util-flat-filter": "2.0.0",
     "unist-util-visit": "5.0.0",
-    "yaml": "2.3.2",
+    "yaml": "2.3.3",
     "zod": "3.22.4"
   },
   "scripts": {
