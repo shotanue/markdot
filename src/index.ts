@@ -51,9 +51,10 @@ export type Ctx = {
   write: (filePath: string, input: string) => Promise<void>;
   env: Record<string, string>;
   meta: {
+    arch: string;
     platform: string;
-    username: string;
     hostname: string;
+    username: string;
   };
 };
 
@@ -64,8 +65,9 @@ const ctx: Ctx = {
   logger,
   env,
   meta: {
+    arch: os.arch(),
+    platform: os.platform(),
     hostname: os.hostname(),
-    platform: os.arch(),
     username: os.userInfo().username,
   },
 };

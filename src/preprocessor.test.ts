@@ -4,13 +4,16 @@ import { describe, expect, it } from "bun:test";
 describe("preprocessor", () => {
   const meta = {
     hostname: "hostname",
-    platform: "platform",
+    platform: "darwin",
     username: "username",
+    arch: "amd64",
   } satisfies Parameters<typeof preprocessor>[1];
 
   it("can render values given as meta", () => {
-    ["hostname", "platform", "username"].forEach((v) => {
-      expect(preprocessor(`{{meta.${v}}}`, meta, {})).toEqual(v);
+    const keys = Object.keys(meta) as [keyof typeof meta];
+
+    keys.forEach((v) => {
+      expect(preprocessor(`{{meta.${v}}}`, meta, {})).toEqual(meta[v]);
     });
   });
 
