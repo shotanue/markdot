@@ -1,7 +1,9 @@
-import chalkTemplate from "chalk-template";
-import { Ctx } from ".";
+export { log };
 
-export const logger: Ctx["logger"] = {
+import chalkTemplate from "chalk-template";
+import { Adapter } from ".";
+
+const log: Adapter["log"] = {
   info: (message, { label } = { label: true }) => {
     console.info(`${label ? "[markdot]" : ""} ${message}`);
   },

@@ -1,7 +1,17 @@
+export { parseArguments };
 import arg from "arg";
-import { ParseArguments } from ".";
 
-export const parseArguments: ParseArguments = async (argv, stdin) => {
+type ParseArguments = (
+  argv: string[],
+  stdin: string,
+) => Promise<
+  | { kind: "stdin"; text: string; fragments: string[] }
+  | { kind: "file"; path: string; fragments: string[] }
+  | { kind: "help" }
+  | { kind: "exit"; message: string }
+>;
+
+const parseArguments: ParseArguments = async (argv, stdin) => {
   const args = arg(
     {
       "--help": Boolean,
@@ -16,13 +26,6 @@ export const parseArguments: ParseArguments = async (argv, stdin) => {
   if (args["--help"]) {
     return {
       kind: "help",
-    };
-  }
-
-  if (args["--doc"]) {
-    return {
-      kind: "doc",
-      resource: args["--doc"],
     };
   }
 

@@ -7,10 +7,6 @@ describe("parseArguments", () => {
     expect(await parseArguments(["-h"], "")).toEqual({ kind: "help" });
   });
 
-  it('should return "doc" kind with resource when --doc is provided', async () => {
-    expect(await parseArguments(["--doc", "resourceName"], "")).toEqual({ kind: "doc", resource: "resourceName" });
-  });
-
   it('should return "stdin" kind with text and no fragments when stdin is provided', async () => {
     expect(await parseArguments([], "sample stdin")).toEqual({ kind: "stdin", text: "sample stdin", fragments: [] });
   });
