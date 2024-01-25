@@ -1,3 +1,5 @@
+export { metaParser };
+
 type Token = {
   type: "tag" | "quoted" | "single-quoted" | "space" | "arg";
   value: string;
@@ -21,7 +23,7 @@ const tokenParser = (input: string): [Token, string] => {
   return [{ type: "space", value: input[0] }, input.slice(1)];
 };
 
-export const argParser = (input: string): Record<string, string> => {
+const metaParser = (input: string): Record<string, string> => {
   const tokens: Token[] = [];
   let remaining = input;
 

@@ -1,7 +1,20 @@
 {
-  "baseUrl": "./src",
+  "$schema": "http://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "lib": ["ESNext"],
+    "paths": {
+      "@": [
+        "./src/index"
+      ],
+      "@resources/*": [
+        "./resources/*"
+      ],
+      "@examples/*": [
+        "./examples/*"
+      ]
+    },
+    "lib": [
+      "ESNext"
+    ],
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "bundler",
@@ -19,11 +32,5 @@
     "types": [
       "bun-types"
     ],
-    "paths": {
-      "@resources/*": ["./resources/*"]
-    }
-  },
-  "include": [
-    "src/**/*"
-  ]
+  }
 }

@@ -1,10 +1,7 @@
 {
   "name": "markdot",
-  "module": "src/index.ts",
+  "module": "index.ts",
   "type": "module",
-  "bin": {
-    "markdot": "src/index.ts"
-  },
   "devDependencies": {
     "@biomejs/biome": "1.2.2",
     "@types/mdast": "4.0.3",
@@ -17,6 +14,7 @@
   "dependencies": {
     "arg": "5.0.2",
     "chalk-template": "1.1.0",
+    "immer": "10.0.3",
     "mustache": "4.2.0",
     "remark-breaks": "4.0.0",
     "remark-frontmatter": "5.0.0",
@@ -26,13 +24,14 @@
     "unified": "11.0.4",
     "unist-util-flat-filter": "2.0.0",
     "unist-util-visit": "5.0.0",
+    "xstate": "5.4.1",
     "yaml": "2.3.4",
     "zod": "3.22.4"
   },
   "scripts": {
     "run": "bun run ./src/index.ts",
     "test": "bun test",
-    "build": "bun build ./src/index.ts --compile --outfile markdot",
+    "build": "bun build ./scripts/markdot.ts --compile --outfile markdot",
     "check": "biome check .",
     "check:fix": "biome check --apply-unsafe .",
     "ci": "biome ci ."

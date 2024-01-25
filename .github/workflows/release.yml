@@ -31,7 +31,7 @@ jobs:
       - name: Setup bun
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: 1.0.3
+          bun-version: 1.0.22
 
       - run: bun install
       - run: bun ci
@@ -42,7 +42,7 @@ jobs:
         uses: svenstaro/upload-release-action@2.7.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: src/markdot
+          file: markdot
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
           overwrite: true
