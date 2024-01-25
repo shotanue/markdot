@@ -1,4 +1,4 @@
-import { argParser } from "./argParser";
+import { metaParser } from "./metaParser";
 import { describe, expect, test } from "bun:test";
 
 describe("argParser", () => {
@@ -18,7 +18,7 @@ describe("argParser", () => {
 
     testCases.forEach(({ input, expected }) => {
       test(`${input}`, () => {
-        expect(argParser(input)).toEqual(expected);
+        expect(metaParser(input)).toEqual(expected);
       });
     });
   });

@@ -1,8 +1,10 @@
+export { mergeEnv };
+
 const replaceEnvVars = (str: string, env: Record<string, string | undefined>): string => {
   return str.replace(/\$([A-Z_][A-Z_0-9]*)/g, (_, varName) => env[varName] || `$${varName}`);
 };
 
-export const mergeEnv = (
+const mergeEnv = (
   a: Record<string, string | undefined>,
   b: Record<string, string | string[]>,
 ): Record<string, string> => {
@@ -29,8 +31,4 @@ export const mergeEnv = (
     }
   }
   return result;
-};
-
-export const getEnv = (env?: Record<string, string | string[]>): Record<string, string> => {
-  return mergeEnv({ ...process.env }, { ...env });
 };
