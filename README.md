@@ -11,7 +11,7 @@ brew install shotanue/tap/markdot
 ## How to use
 
 ```bash
-markdot dotfile.md
+markdot --file=dotfile.md
 ```
 
 - dotfile.md
