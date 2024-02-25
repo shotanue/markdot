@@ -9,11 +9,13 @@ const helpText = (): string => {
 
 {bold ## USAGE}
 
-    {dim $} {bold markdot} [--help, -h] --file {underline path}
+    {dim $} {bold markdot} {underline path}
+    {dim $} {bold markdot} {underline path#foo}
+    {dim $} cat dotfile.md | {bold markdot}
+    {dim $} cat dotfile.md | {bold markdot --fragment=foo}
 
 {bold ## OPTIONS}
     --help, -h                  Shows this help message
-    --file {underline path}                 Markdown file path
-    --fragment {underline fragment}         filter task to run with fragment
+    --fragment {underline fragment}         Filter task to run with fragment
 `;
 };
