@@ -24,8 +24,7 @@ const parseArguments: ParseArguments = async (argv, stdin) => {
   );
 
   if (args._.length === 1) {
-    const url = Bun.pathToFileURL(args._[0]);
-    const [path, fragment] = url.pathname.split("%23");
+    const [path, fragment] = args._[0].split("#");
 
     return {
       kind: "file",
