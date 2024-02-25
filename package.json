@@ -34,6 +34,6 @@
     "build": "bun build ./scripts/markdot.ts --compile --outfile markdot",
     "check": "biome check .",
     "check:fix": "biome check --apply-unsafe .",
-    "ci": "biome ci ."
+    "ci": "biome ci . && bun test"
   }
 }
