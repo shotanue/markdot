@@ -23,8 +23,8 @@ const parseArguments: ParseArguments = async (argv, stdin) => {
     { argv },
   );
 
-  if (args["_"].length === 1) {
-    const path = args["_"][0];
+  if (args._.length === 1) {
+    const path = args._[0];
     return {
       kind: "file",
       path,
