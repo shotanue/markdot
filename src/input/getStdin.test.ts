@@ -1,6 +1,6 @@
+import { describe, expect, it } from "bun:test";
 import { Readable } from "stream";
 import { getStdin } from "./getStdin";
-import { describe, expect, it } from "bun:test";
 
 describe("getStdin", () => {
   it("should return content from the provided stream when isTTY is false", async () => {
