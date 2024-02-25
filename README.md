@@ -11,7 +11,7 @@ brew install shotanue/tap/markdot
 ## How to use
 
 ```bash
-markdot --file=dotfile.md
+markdot dotfile.md
 ```
 
 - dotfile.md
@@ -153,7 +153,6 @@ brew "git"
 ```
 ````
 
-<!-- WIP
 ## fragment
 
 You can filter which code blocks to run. Markdot accepts fragments similar to URLs.
@@ -197,7 +196,6 @@ echo "evaluated: buzz"
 echo "ignored"
 ```
 ````
--->
 
 ## preprocessor
 

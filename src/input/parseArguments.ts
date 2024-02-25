@@ -23,6 +23,15 @@ const parseArguments: ParseArguments = async (argv, stdin) => {
     { argv },
   );
 
+  if (args["_"].length === 1) {
+    const path = args["_"][0];
+    return {
+      kind: "file",
+      path,
+      fragments: [new URL(`file://${path}`).hash.slice(1)],
+    };
+  }
+
   if (args["--help"]) {
     return {
       kind: "help",
@@ -33,14 +42,6 @@ const parseArguments: ParseArguments = async (argv, stdin) => {
     return {
       kind: "stdin",
       text: stdin,
-      fragments: args["--fragment"] ?? [],
-    };
-  }
-
-  if (args["--file"]) {
-    return {
-      kind: "file",
-      path: args["--file"],
       fragments: args["--fragment"] ?? [],
     };
   }
