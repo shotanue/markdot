@@ -39,7 +39,7 @@ const metaParser = (input: string): Record<string, string> => {
     result[head] = tail ?? "";
   };
   let buffer = "";
-  tokens.forEach((token) => {
+  for (const token of tokens) {
     if (["tag"].includes(token.type)) {
       buffer += token.value;
     } else if (["quoted", "single-quoted"].includes(token.type)) {
@@ -49,7 +49,7 @@ const metaParser = (input: string): Record<string, string> => {
       pushResult(buffer);
       buffer = "";
     }
-  });
+  }
 
   if (buffer) pushResult(buffer);
 
