@@ -29,7 +29,7 @@
     "zod": "3.22.4"
   },
   "scripts": {
-    "run": "bun run ./scripts/markdot.ts",
+    "markdot": "bun run ./scripts/markdot.ts",
     "test": "bun test",
     "build": "bun build ./scripts/markdot.ts --compile --outfile markdot",
     "check": "biome check .",
