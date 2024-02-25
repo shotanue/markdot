@@ -7,31 +7,31 @@ describe("parseArguments", () => {
     expect(await parseArguments(["-h"], "")).toEqual({ kind: "help" });
   });
 
-  it('should return "stdin" kind with text and no fragments when stdin is provided', async () => {
-    expect(await parseArguments([], "sample stdin")).toEqual({ kind: "stdin", text: "sample stdin", fragments: [] });
-  });
-
-  it('should return "stdin" kind with text and fragments when both stdin and --fragment are provided', async () => {
-    expect(await parseArguments(["--fragment", "frag1", "--fragment", "frag2"], "sample stdin")).toEqual({
+  it('should return "stdin" kind', async () => {
+    expect(await parseArguments([], "sample stdin")).toEqual({
       kind: "stdin",
       text: "sample stdin",
-      fragments: ["frag1", "frag2"],
-    });
-  });
-
-  it('should return "file" kind with path and no fragments when --file is provided', async () => {
-    expect(await parseArguments(["--file", "path/to/file"], "")).toEqual({
-      kind: "file",
-      path: "path/to/file",
       fragments: [],
     });
+
+    expect(await parseArguments(["--fragment", "frag1"], "sample stdin")).toEqual({
+      kind: "stdin",
+      text: "sample stdin",
+      fragments: ["frag1"],
+    });
   });
 
-  it('should return "file" kind with path and fragments when both --file and --fragment are provided', async () => {
-    expect(await parseArguments(["--file", "path/to/file", "--fragment", "frag1", "--fragment", "frag2"], "")).toEqual({
+  it('should return "file" kind', async () => {
+    expect(await parseArguments(["path/to/file"], "")).toEqual({
       kind: "file",
-      path: "path/to/file",
-      fragments: ["frag1", "frag2"],
+      path: Bun.pathToFileURL("path/to/file").pathname,
+      fragments: [],
+    });
+
+    expect(await parseArguments([Bun.pathToFileURL("path/to/file#hash").pathname], "")).toEqual({
+      kind: "file",
+      path: Bun.pathToFileURL("path/to/file").pathname,
+      fragments: ["hash"],
     });
   });
 });
