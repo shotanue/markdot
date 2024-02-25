@@ -1,6 +1,6 @@
+import { describe, expect, it } from "bun:test";
 import { Actor, AnyActorLogic, createActor, fromPromise } from "xstate";
 import { machine } from ".";
-import { describe, expect, it } from "bun:test";
 
 import bash from "@examples/codeblock-execution/bash.md";
 import brewfile from "@examples/codeblock-execution/brewfile.md";

@@ -1,5 +1,5 @@
-import { metaParser } from "./metaParser";
 import { describe, expect, test } from "bun:test";
+import { metaParser } from "./metaParser";
 
 describe("argParser", () => {
   describe("ignores arguments with unknown prefix", () => {
@@ -16,10 +16,10 @@ describe("argParser", () => {
       { input: "::foo=bar --buzz", expected: { "::foo": "bar" } },
     ];
 
-    testCases.forEach(({ input, expected }) => {
+    for (const { input, expected } of testCases) {
       test(`${input}`, () => {
         expect(metaParser(input)).toEqual(expected);
       });
-    });
+    }
   });
 });
