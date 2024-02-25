@@ -24,13 +24,13 @@ describe("parseArguments", () => {
   it('should return "file" kind', async () => {
     expect(await parseArguments(["path/to/file"], "")).toEqual({
       kind: "file",
-      path: Bun.pathToFileURL("path/to/file").pathname,
+      path: "path/to/file",
       fragments: [],
     });
 
-    expect(await parseArguments([Bun.pathToFileURL("path/to/file#hash").pathname], "")).toEqual({
+    expect(await parseArguments(["path/to/file#hash"], "")).toEqual({
       kind: "file",
-      path: Bun.pathToFileURL("path/to/file").pathname,
+      path: "path/to/file",
       fragments: ["hash"],
     });
   });
