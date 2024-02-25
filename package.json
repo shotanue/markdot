@@ -3,7 +3,7 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
-    "@biomejs/biome": "1.2.2",
+    "@biomejs/biome": "1.5.3",
     "@types/mdast": "4.0.3",
     "@types/mustache": "4.2.5",
     "bun-types": "1.0.29"
