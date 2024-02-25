@@ -1,5 +1,5 @@
-import { parseArguments } from "./parseArguments";
 import { describe, expect, it } from "bun:test";
+import { parseArguments } from "./parseArguments";
 
 describe("parseArguments", () => {
   it('should return "help" kind when --help or -h is provided', async () => {
