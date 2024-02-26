@@ -3,7 +3,7 @@ export { exec };
 import chalkTemplate from "chalk-template";
 import { Adapter } from ".";
 
-const exec: Adapter["exec"] = async ({ command, stdin, env }) => {
+const exec: Adapter["exec"] = async ({ command, stdin, env, log }) => {
   log.info(chalkTemplate`[command] {dim ${command.join(" ")}}`);
 
   const proc = Bun.spawnSync(command, {
