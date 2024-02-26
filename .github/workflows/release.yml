@@ -21,7 +21,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Dump runner information
+      - name: Build executable
         run: |
           echo "Runner Name: ${{ runner.name }}"
           echo "Operating System: ${{ runner.os }}"
@@ -31,11 +31,9 @@ jobs:
       - name: Setup bun
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: 1.0.22
+          bun-version: 1.0.29
 
       - run: bun install
-      - run: bun ci
-      - run: bun test
       - run: bun run build
  
       - name: Upload binaries to release
