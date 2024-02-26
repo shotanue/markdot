@@ -9,6 +9,12 @@ const markdot = (args: { markdownText: string; fragments: string[] }): Promise<v
   const running = new Promise<void>((resolve, reject) => {
     actor.start().subscribe({
       complete: () => {
+        if (actor.getSnapshot().value === "error") {
+          console.error("error");
+          console.error(actor.getSnapshot().context.history);
+          reject();
+          return;
+        }
         resolve();
       },
       error: (err) => {

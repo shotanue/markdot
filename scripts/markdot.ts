@@ -27,6 +27,8 @@ try {
     log.error(obj.message, { label: false });
     log.error("[trace]");
     log.error(obj.stack ?? "", { label: false });
+  } else {
+    log.error(JSON.stringify(obj));
   }
   process.exit(1);
 }
