@@ -113,8 +113,7 @@ const machine = setup(
           code: input.task.code,
           exec,
           env: input.context.env,
-        }).catch((e) => {
-          log.error(e);
+          log,
         });
       }),
       executeBrewfile: fromPromise(async ({ input }: { input: { task: Task; context: Context } }) => {
