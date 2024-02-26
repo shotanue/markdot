@@ -125,6 +125,7 @@ const machine = setup(
           },
           exec,
           env: input.context.env,
+          log,
         }).then(() => {
           log.info("");
         });
@@ -212,10 +213,10 @@ const machine = setup(
           { guard: "matchCopyCodeBlock", target: "copyCodeBlock" },
           { guard: "matchExecuteShellScript", target: "executeShellScript" },
           { guard: "matchExecuteBrewfile", target: "executeBrewfile" },
-          { guard: "fallback", target: "error" },
+          { guard: "fallback", target: "popTask" },
         ],
       },
-      doneTask: {
+      popTask: {
         entry: {
           type: "popTask",
         },
@@ -228,7 +229,7 @@ const machine = setup(
           src: "ignoreTask",
           input: {},
           onDone: {
-            target: "doneTask",
+            target: "popTask",
           },
           onError: "error",
         },
@@ -241,9 +242,8 @@ const machine = setup(
             task: context.tasks[0],
           }),
           onDone: {
-            target: "doneTask",
+            target: "popTask",
           },
-          onError: "error",
         },
       },
       executeShellScript: {
@@ -254,9 +254,8 @@ const machine = setup(
             task: context.tasks[0],
           }),
           onDone: {
-            target: "doneTask",
+            target: "popTask",
           },
-          onError: "error",
         },
       },
       executeBrewfile: {
@@ -267,9 +266,8 @@ const machine = setup(
             task: context.tasks[0],
           }),
           onDone: {
-            target: "doneTask",
+            target: "popTask",
           },
-          onError: "error",
         },
       },
       error: {
