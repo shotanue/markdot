@@ -4,6 +4,7 @@ import os from "os";
 import { produce } from "immer";
 import Mustache from "mustache";
 import { and, assign, fromPromise, setup } from "xstate";
+import { z } from "zod";
 
 import { copyCodeBlock } from "../actors/copyCodeBlock";
 import { executeBrewfile } from "../actors/executeBrewfile";
@@ -26,7 +27,12 @@ type Context = {
   fragments: string[];
   tasks: Task[];
   history: Task[];
-  preferences: Record<string, unknown>;
+  preferences: {
+    env: {
+      append: Record<string, string>;
+      override: Record<string, string>;
+    };
+  };
   env: Record<string, string>;
   meta: {
     arch: string;
@@ -66,7 +72,20 @@ const machine = setup(
       ),
       loadConfigs: assign(({ context }) =>
         produce(context, (draft) => {
-          draft.preferences = parseConfigs({ markdownText: context.markdownText });
+          const schema = z.object({
+            env: z
+              .object({
+                append: z.record(z.string(), z.string()).default({}),
+                override: z.record(z.string(), z.string()).default({}),
+              })
+              .default({
+                append: {},
+                override: {},
+              }),
+          });
+
+          const config = parseConfigs({ markdownText: context.markdownText });
+          draft.preferences = schema.parse(config);
         }),
       ),
       transformMarkdownIntoTasks: assign(({ context }) =>
@@ -93,7 +112,11 @@ const machine = setup(
       ),
       loadEnv: assign(({ context }) =>
         produce(context, (draft) => {
-          draft.env = mergeEnv({ ...process.env }, { ...context.env });
+          draft.env = mergeEnv({
+            a: { ...process.env },
+            append: context.preferences?.env?.append ?? {},
+            override: { ...context.preferences.env.override },
+          });
         }),
       ),
       popTask: assign(({ context }) =>
