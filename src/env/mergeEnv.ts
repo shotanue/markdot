@@ -1,33 +1,25 @@
 export { mergeEnv };
 
-const replaceEnvVars = (str: string, env: Record<string, string | undefined>): string => {
-  return str.replace(/\$([A-Z_][A-Z_0-9]*)/g, (_, varName) => env[varName] || `$${varName}`);
-};
+type MergeEnv = (args: {
+  a: Record<string, string | undefined>;
+  append: Record<string, string>;
+  override: Record<string, string>;
+}) => Record<string, string>;
 
-const mergeEnv = (
-  a: Record<string, string | undefined>,
-  b: Record<string, string | string[]>,
-): Record<string, string> => {
-  const result: Record<string, string> = {};
-
+const mergeEnv: MergeEnv = ({ a, append, override }): Record<string, string> => {
   // Combine keys from both records
-  const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  const allKeys = new Set([...Object.keys(a), ...Object.keys(append), ...Object.keys(override)]);
 
+  const result: Record<string, string> = {};
   for (const key of allKeys) {
-    if (a[key] && b[key]) {
-      const valueFromB = Array.isArray(b[key])
-        ? (b[key] as string[]).map((item) => replaceEnvVars(item, a)).join(":")
-        : replaceEnvVars(b[key] as string, a);
-
-      result[key] = `${a[key]}:${valueFromB}`;
+    if (override[key]) {
+      result[key] = override[key];
+    } else if (a[key] && append[key]) {
+      result[key] = `${a[key]}:${append[key]}`;
     } else if (a[key]) {
       result[key] = a[key] ?? "";
-    } else {
-      const valueFromB = Array.isArray(b[key])
-        ? (b[key] as string[]).map((item) => replaceEnvVars(item, a)).join(":")
-        : replaceEnvVars(b[key] as string, a);
-
-      result[key] = valueFromB;
+    } else if (append[key]) {
+      result[key] = append[key];
     }
   }
   return result;

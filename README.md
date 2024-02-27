@@ -245,15 +245,12 @@ You can write config to frontmatter. YAML and TOML are supported.
 
 ````markdown
 +++
-# At runtime, duplicate env variables are merged.
-[env]
+[env.append]
+# Append value to PATH. If PATH is not exist, just set the value.
+PATH=":/opt/homebrew/bin:/usr/local/bin:/home/linuxbrew/.linuxbrew/bin"
+[env.override]
+# Override value. Override is prior to env.append.
 DOTFILES_HOME="$HOME/ghq/github.com/shotanue/dotfiles"
-PATH=[
-  "/opt/homebrew/bin",
-  "/usr/local/bin",
-  "/home/linuxbrew/.linuxbrew/bin",
-  "/home/foo"
-]
 +++
 ````
 
