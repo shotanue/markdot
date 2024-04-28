@@ -135,6 +135,7 @@ const machine = setup(
         return executeShellScript({
           code: input.task.code,
           exec,
+          lang: input.task.lang,
           env: input.context.env,
           log,
         });
@@ -179,7 +180,10 @@ const machine = setup(
       lang: ({ context }, names: string[]) => names.includes(context.tasks[0].lang.toLowerCase()),
       matchIgnore: and([{ type: "codeblock" }, { type: "tag", params: "::ignore" }]),
       matchCopyCodeBlock: and([{ type: "codeblock" }, { type: "tag", params: "::to" }]),
-      matchExecuteShellScript: and([{ type: "codeblock" }, { type: "lang", params: ["bash", "sh"] }]),
+      matchExecuteShellScript: and([
+        { type: "codeblock" },
+        { type: "lang", params: ["sh", "bash", "zsh", "fish", "nushell", "nu"] },
+      ]),
       matchExecuteBrewfile: and([{ type: "codeblock" }, { type: "lang", params: ["brewfile"] }]),
       fallback: () => true,
     },
