@@ -1,4 +1,4 @@
-import { Adapter } from "../adapter";
+import type { Adapter } from "../adapter";
 
 export { executeBrewfile };
 

@@ -2,19 +2,11 @@
   "$schema": "http://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "paths": {
-      "@": [
-        "./src/index"
-      ],
-      "@resources/*": [
-        "./resources/*"
-      ],
-      "@examples/*": [
-        "./examples/*"
-      ]
+      "@": ["./src/index"],
+      "@resources/*": ["./resources/*"],
+      "@examples/*": ["./examples/*"]
     },
-    "lib": [
-      "ESNext"
-    ],
+    "lib": ["ESNext"],
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "bundler",
@@ -29,8 +21,6 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
-    "types": [
-      "bun-types"
-    ],
+    "types": ["bun-types"]
   }
 }
