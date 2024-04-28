@@ -8,6 +8,7 @@ type ParseArguments = (
   | { kind: "stdin"; text: string; fragments: string[] }
   | { kind: "file"; path: string; fragments: string[] }
   | { kind: "help" }
+  | { kind: "version" }
   | { kind: "exit"; message: string }
 >;
 
@@ -19,6 +20,8 @@ const parseArguments: ParseArguments = async (argv, stdin) => {
       "--doc": String,
       "--fragment": [String],
       "--file": String,
+      "--version": Boolean,
+      "-v": "--version",
     },
     { argv },
   );
@@ -33,9 +36,15 @@ const parseArguments: ParseArguments = async (argv, stdin) => {
     };
   }
 
-  if (args["--help"]) {
+  if (args["--help"] || args["-h"]) {
     return {
       kind: "help",
+    };
+  }
+
+  if (args["--version"] || args["-v"]) {
+    return {
+      kind: "version",
     };
   }
 
