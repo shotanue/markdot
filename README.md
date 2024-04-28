@@ -65,8 +65,6 @@ Codeblock with some of language tags will be executed.
 
 Supported languages are below.
 
-### bash
-
 ````markdown
 
 ```sh
