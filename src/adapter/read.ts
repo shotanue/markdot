@@ -1,4 +1,4 @@
-import { Adapter } from ".";
+import type { Adapter } from ".";
 import { resolveTilde } from "./resolveTilde";
 
 export { read };

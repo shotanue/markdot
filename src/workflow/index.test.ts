@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { Actor, AnyActorLogic, createActor, fromPromise } from "xstate";
+import { type Actor, type AnyActorLogic, createActor, fromPromise } from "xstate";
 import { machine } from ".";
 
 import bash from "@examples/codeblock-execution/bash.md";

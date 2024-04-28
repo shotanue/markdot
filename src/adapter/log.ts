@@ -1,7 +1,7 @@
 export { log };
 
 import chalkTemplate from "chalk-template";
-import { Adapter } from ".";
+import type { Adapter } from ".";
 
 const log: Adapter["log"] = {
   info: (message, { label } = { label: true }) => {

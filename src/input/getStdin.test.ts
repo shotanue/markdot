@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { Readable } from "stream";
+import { Readable } from "node:stream";
 import { getStdin } from "./getStdin";
 
 describe("getStdin", () => {
