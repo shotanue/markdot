@@ -1,7 +1,7 @@
 export { resolveTilde };
 
-import os from "os";
-import path from "path";
+import os from "node:os";
+import path from "node:path";
 
 const resolveTilde = (filePath: string): string => {
   if (filePath[0] === "~") {

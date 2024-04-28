@@ -1,7 +1,7 @@
 export { exec };
 
 import chalkTemplate from "chalk-template";
-import { Adapter } from ".";
+import type { Adapter } from ".";
 
 const exec: Adapter["exec"] = async ({ command, stdin, env, log }) => {
   log.info(chalkTemplate`[command] {dim ${[command, stdin].join(" ")}}`);
