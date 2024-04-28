@@ -1,10 +1,16 @@
 import { getStdin, helpText, log, markdot, parseArguments } from "@";
+import { version } from "../package.json";
 
 try {
   const result = await parseArguments(
     process.argv.slice(2),
     await getStdin(process.stdin.isTTY, () => Bun.stdin.stream()),
   );
+
+  if (result.kind === "version") {
+    log.info(version, { label: false });
+    process.exit(0);
+  }
 
   if (result.kind === "help") {
     log.info(helpText(), { label: false });
