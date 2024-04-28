@@ -19,12 +19,15 @@ markdot dotfile.md
 ````markdown
 # sample
 
-Markdot ignores all text except for code blocks. Therefore, you can add descriptions like this.
-This tool evaluates codeblocks in sequence.
+Markdot evaluates codeblocks in sequence.
+
+This codeblock is evaluated as shell script.
+```sh
+echo "hello world"
+```
 
 ## install brew
 
-Markdot evaluates this codeblock as bash script, given language tag as `bash`.
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
@@ -65,9 +68,28 @@ Supported languages are below.
 ### bash
 
 ````markdown
-You can run bash script.
+
+```sh
+echo foo
+```
 
 ```bash
+echo foo
+```
+
+```zsh
+echo foo
+```
+
+```fish
+echo foo
+```
+
+```nushell
+echo foo
+```
+
+```nu
 echo foo
 ```
 
