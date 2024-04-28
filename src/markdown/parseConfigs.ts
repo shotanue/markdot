@@ -1,6 +1,6 @@
 export { parseConfigs };
 
-import { Root } from "mdast";
+import type { Root } from "mdast";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkParse from "remark-parse";
 import * as TOML from "smol-toml";

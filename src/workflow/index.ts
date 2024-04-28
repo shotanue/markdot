@@ -1,6 +1,6 @@
 export { machine };
 
-import os from "os";
+import os from "node:os";
 import { produce } from "immer";
 import Mustache from "mustache";
 import { and, assign, fromPromise, setup } from "xstate";
