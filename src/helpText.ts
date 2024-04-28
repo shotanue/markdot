@@ -17,5 +17,6 @@ const helpText = (): string => {
 {bold ## OPTIONS}
     --help, -h                  Shows this help message
     --fragment {underline fragment}         Filter task to run with fragment
+    --version, -v               Shows version
 `;
 };
