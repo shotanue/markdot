@@ -28,7 +28,7 @@
     "unist-util-visit": "5.0.0",
     "xstate": "5.12.0",
     "yaml": "2.4.2",
-    "zod": "3.23.5"
+    "zod": "3.23.6"
   },
   "scripts": {
     "markdot": "bun run ./scripts/markdot.ts",
