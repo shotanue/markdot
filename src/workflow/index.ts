@@ -156,12 +156,13 @@ const machine = setup(
       }),
       copyCodeBlock: fromPromise(async ({ input }: { input: { task: Task; context: Context } }) => {
         const { write, log } = adapter;
-        const { to, text } = {
-          to: input.task.meta["::to"],
+        const { to, text, permission } = {
+          to: input.task.meta["::to"] ?? "",
           text: input.task.code,
+          permission: input.task.meta["::permission"] ? Number(`0o${input.task.meta["::permission"]}`) : undefined,
         };
 
-        return copyCodeBlock({ text, to, write })
+        return copyCodeBlock({ text, to, write, permission })
           .then(() => {
             log.info(`Success writing. path:${to}`);
           })

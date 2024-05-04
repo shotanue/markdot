@@ -177,7 +177,7 @@ describe("::to", () => {
     const { context } = actor.getSnapshot();
 
     expect(context.history[1].lang).toBe("sh");
-    expect(context.history[1].meta).toEqual({ "::to": "~/.config/markdot-test/sample.sh" });
+    expect(context.history[1].meta).toEqual({ "::to": "~/.config/markdot-test/sample.sh", "::permission": "755" });
   });
 });
 
