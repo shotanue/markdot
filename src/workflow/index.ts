@@ -198,7 +198,12 @@ const machine = setup(
       fragments: [],
       tasks: [],
       history: [],
-      preferences: {},
+      preferences: {
+        env: {
+          append: {},
+          override: {},
+        },
+      },
       env: {},
       meta: {
         arch: "",
