@@ -162,6 +162,18 @@ echo foo
 ```
 ````
 
+
+#### permission (optional)
+
+You can set permission to the file with `::permission` tag.
+
+````markdown
+```bash ::to=~/.local/bin/foo ::permission=755
+echo foo
+```
+````
+
+
 ### ::args
 
 You can give arguments to command codeblock runs.
