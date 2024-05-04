@@ -32,8 +32,9 @@ const treeToTasks = (tree: Root) => {
         fragmentBuffer.push(fragment);
       }
     }
+
+    const fragments = [...fragmentBuffer];
     if (node.type === "code") {
-      const fragments = [...fragmentBuffer];
       list.push({
         kind: "codeblock",
         lang: node.lang ?? "",
@@ -43,6 +44,21 @@ const treeToTasks = (tree: Root) => {
         breadcrumb: fragments.map((x) => `${"#".repeat(x.depth)} ${x.text}`).join(" > "),
       });
     }
+    if (node.type === "link") {
+      const firstChildren = node.children[0];
+      if (firstChildren.type !== "text") {
+        throw new Error("link value must be text node");
+      }
+      // skip url text without `[]()` syntax
+      if (node.url !== firstChildren.value) {
+        list.push({
+          kind: "createSymlink",
+          from: firstChildren.value,
+          to: node.url,
+          fragments,
+        });
+      }
+    }
   }
   return list;
 };
@@ -51,7 +67,9 @@ const parseMarkdown = ({ markdownText, fragments }: { markdownText: string; frag
   const parser = unified().use(remarkParse).use(remarkBreaks).use(remarkGfm);
   const mdast = parser.parse(markdownText);
 
-  const flattenTree = flatFilter<Root>(mdast, (node) => ["code", "heading"].includes(node.type));
+  const flattenTree = flatFilter<Root>(mdast, (node) => {
+    return ["code", "heading", "link"].includes(node.type);
+  });
 
   if (flattenTree === null) {
     throw new Error("tree is null");

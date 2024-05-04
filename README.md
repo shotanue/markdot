@@ -124,8 +124,6 @@ You can write codeblocks with single tag.
 
 Every tag requires `::` prefix.
 
-Tag is exclusive. Thus, no combination of tags is allowed.
-
 
 ### ::ignore
 
@@ -227,6 +225,16 @@ echo "evaluated: buzz"
 ```bash
 echo "ignored"
 ```
+````
+
+## hyperlink(symlink)
+
+You can create symlink with hyperlink syntax.
+
+````markdown
+This example creates symlink to `~/.config/nushell` from `~/Library/Application Support/nushell`.
+
+[~/Library/Application\ Support/nushell](~/.config/nushell)
 ````
 
 ## preprocessor
