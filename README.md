@@ -142,7 +142,7 @@ make install
 
 ### ::to
 
-Markdot copies this content to given path, **without codeblock execution**.
+Markdot copies the codeblock content to given path, **without codeblock execution**.
 
 When you want write some config files, this tag is useful.
 
@@ -153,7 +153,7 @@ experimental = true
 ```
 ````
 
-In this example, Markdot simply copies this script to the given path, even though it is a bash script.
+In this example, Markdot simply copies this script to the given path, without executing the bash script.
 
 ````markdown
 Skip running, and copying this script to the path.
