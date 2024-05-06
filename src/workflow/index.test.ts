@@ -5,6 +5,7 @@ import { machine } from ".";
 import bash from "@examples/codeblock-execution/bash.md";
 import brewfile from "@examples/codeblock-execution/brewfile.md";
 import evaluationOrder from "@examples/codeblock-execution/evaluation-order.md";
+import createSymlink from "@examples/symlink/create-symlink.md";
 import args from "@examples/tag/args.md";
 import ignore from "@examples/tag/ignore.md";
 import to from "@examples/tag/to.md";
@@ -44,6 +45,11 @@ const provideTestDeps = (m: typeof machine) => {
           resolve();
         });
       }),
+      createSymlink: fromPromise(async () => {
+        return new Promise((resolve) => {
+          resolve();
+        });
+      }),
     },
   });
 };
@@ -67,8 +73,12 @@ describe("workflow", () => {
       ["c", "bash"],
       ["d", "brewfile"],
     ].forEach(([text, lang], i) => {
-      expect(context.history[i].fragments[1].text).toBe(text);
-      expect(context.history[i].lang).toBe(lang);
+      const history = context.history[i];
+      if (history.kind !== "codeblock") {
+        throw new Error("must be codeblock");
+      }
+      expect(history.fragments[1].text).toBe(text);
+      expect(history.lang).toBe(lang);
     });
   });
 });
@@ -110,6 +120,9 @@ describe("brewfile", () => {
 
     const { context } = actor.getSnapshot();
 
+    if (context.history[0].kind !== "codeblock" || context.history[1].kind !== "codeblock") {
+      throw new Error("must be codeblock");
+    }
     expect(context.history[0].lang).toBe("brewfile");
     expect(context.history[0].code).toBe(['brew "git"', 'brew "mise"'].join("\n"));
 
@@ -138,6 +151,9 @@ describe("::ignore", () => {
 
     const { context } = actor.getSnapshot();
 
+    if (context.history[0].kind !== "codeblock") {
+      throw new Error("must be codeblock");
+    }
     expect(context.history[0].lang).toBe("sh");
   });
 });
@@ -153,6 +169,9 @@ describe("::to", () => {
 
     const { context } = actor.getSnapshot();
 
+    if (context.history[0].kind !== "codeblock") {
+      throw new Error("must be codeblock");
+    }
     expect(context.history[0].lang).toBe("toml");
     expect(context.history[0].meta).toEqual({ "::to": "~/.config/markdot-test/sample.toml" });
   });
@@ -176,8 +195,11 @@ describe("::to", () => {
 
     const { context } = actor.getSnapshot();
 
+    if (context.history[1].kind !== "codeblock") {
+      throw new Error("must be codeblock");
+    }
     expect(context.history[1].lang).toBe("sh");
-    expect(context.history[1].meta).toEqual({ "::to": "~/.config/markdot-test/sample.sh" });
+    expect(context.history[1].meta).toEqual({ "::to": "~/.config/markdot-test/sample.sh", "::permission": "755" });
   });
 });
 
@@ -192,7 +214,29 @@ describe("::args", () => {
 
     const { context } = actor.getSnapshot();
 
+    if (context.history[0].kind !== "codeblock") {
+      throw new Error("must be codeblock");
+    }
     expect(context.history[0].lang).toBe("brewfile");
     expect(context.history[0].meta).toEqual({ "::args": "--verbose --no-lock" });
+  });
+});
+
+describe("create symlink", () => {
+  it("can create symlink", async () => {
+    const actor = createActor(provideTestDeps(machine));
+
+    await run(actor, {
+      markdownText: await read(createSymlink),
+      fragments: [],
+    });
+
+    const { context } = actor.getSnapshot();
+
+    if (context.history[0].kind !== "createSymlink") {
+      throw new Error("must be hyperlink");
+    }
+    expect(context.history[0].from).toBe("~/Library/Application\\ Support/nushell");
+    expect(context.history[0].to).toBe("~/.config/nushell");
   });
 });

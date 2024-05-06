@@ -13,14 +13,29 @@ import * as adapter from "../adapter";
 import { mergeEnv } from "../env";
 import { parseConfigs, parseMarkdown } from "../markdown";
 
-export type Task = {
+type CodeBlockTask = {
   kind: "codeblock";
   lang: string;
-  meta: Record<string, string>;
+  meta: Record<string, string | undefined>;
   code: string;
-  fragments: { depth: number; text: string }[];
+  fragments: {
+    depth: number;
+    text: string;
+  }[];
   breadcrumb: string;
 };
+
+type CreateSymlink = {
+  kind: "createSymlink";
+  from: string;
+  to: string;
+  fragments: {
+    depth: number;
+    text: string;
+  }[];
+};
+
+export type Task = CodeBlockTask | CreateSymlink;
 
 type Context = {
   markdownText: string;
@@ -129,7 +144,7 @@ const machine = setup(
       ),
     },
     actors: {
-      executeShellScript: fromPromise(async ({ input }: { input: { task: Task; context: Context } }) => {
+      executeShellScript: fromPromise(async ({ input }: { input: { task: CodeBlockTask; context: Context } }) => {
         const { exec, log } = adapter;
 
         return executeShellScript({
@@ -140,7 +155,7 @@ const machine = setup(
           log,
         });
       }),
-      executeBrewfile: fromPromise(async ({ input }: { input: { task: Task; context: Context } }) => {
+      executeBrewfile: fromPromise(async ({ input }: { input: { task: CodeBlockTask; context: Context } }) => {
         const { exec, log } = adapter;
         return executeBrewfile({
           brew: {
@@ -154,14 +169,18 @@ const machine = setup(
           log.info("");
         });
       }),
-      copyCodeBlock: fromPromise(async ({ input }: { input: { task: Task; context: Context } }) => {
+      copyCodeBlock: fromPromise(async ({ input }: { input: { task: CodeBlockTask; context: Context } }) => {
         const { write, log } = adapter;
-        const { to, text } = {
-          to: input.task.meta["::to"],
+        const { to, text, permission } = {
+          to: input.task.meta["::to"] ?? "",
           text: input.task.code,
+          permission: input.task.meta["::permission"] ? Number(`0o${input.task.meta["::permission"]}`) : undefined,
         };
+        if (to === "") {
+          throw new Error("::to must not be empty");
+        }
 
-        return copyCodeBlock({ text, to, write })
+        return copyCodeBlock({ text, to, write, permission })
           .then(() => {
             log.info(`Success writing. path:${to}`);
           })
@@ -172,12 +191,29 @@ const machine = setup(
       ignoreTask: fromPromise(async () => {
         return;
       }),
+      createSymlink: fromPromise(async ({ input }: { input: { task: CreateSymlink; context: Context } }) => {
+        const { createSymlink } = adapter;
+
+        return createSymlink({ from: input.task.from, to: input.task.to });
+      }),
     },
     guards: {
       emptyTask: ({ context }) => context.tasks.length === 0,
       codeblock: ({ context }) => context.tasks[0].kind === "codeblock",
-      tag: ({ context }, name: string) => name in context.tasks[0].meta,
-      lang: ({ context }, names: string[]) => names.includes(context.tasks[0].lang.toLowerCase()),
+      hyperlink: ({ context }) => context.tasks[0].kind === "createSymlink",
+      tag: ({ context }, name: string) => {
+        if (context.tasks[0].kind !== "codeblock") {
+          throw Error(`kind is not codeblock. kind: ${context.tasks[0].kind}`);
+        }
+        return name in context.tasks[0].meta;
+      },
+      lang: ({ context }, names: string[]) => {
+        if (context.tasks[0].kind !== "codeblock") {
+          return false;
+        }
+        return names.includes(context.tasks[0].lang.toLowerCase());
+      },
+      // `type:xxx` reffers guards above
       matchIgnore: and([{ type: "codeblock" }, { type: "tag", params: "::ignore" }]),
       matchCopyCodeBlock: and([{ type: "codeblock" }, { type: "tag", params: "::to" }]),
       matchExecuteShellScript: and([
@@ -185,6 +221,7 @@ const machine = setup(
         { type: "lang", params: ["sh", "bash", "zsh", "fish", "nushell", "nu"] },
       ]),
       matchExecuteBrewfile: and([{ type: "codeblock" }, { type: "lang", params: ["brewfile"] }]),
+      matchCreateSymlink: and([{ type: "hyperlink" }]),
       fallback: () => true,
     },
   },
@@ -198,7 +235,12 @@ const machine = setup(
       fragments: [],
       tasks: [],
       history: [],
-      preferences: {},
+      preferences: {
+        env: {
+          append: {},
+          override: {},
+        },
+      },
       env: {},
       meta: {
         arch: "",
@@ -240,6 +282,7 @@ const machine = setup(
           { guard: "matchCopyCodeBlock", target: "copyCodeBlock" },
           { guard: "matchExecuteShellScript", target: "executeShellScript" },
           { guard: "matchExecuteBrewfile", target: "executeBrewfile" },
+          { guard: "matchCreateSymlink", target: "createSymlink" },
           { guard: "fallback", target: "popTask" },
         ],
       },
@@ -264,10 +307,15 @@ const machine = setup(
       copyCodeBlock: {
         invoke: {
           src: "copyCodeBlock",
-          input: ({ context }) => ({
-            context,
-            task: context.tasks[0],
-          }),
+          input: ({ context }) => {
+            if (context.tasks[0].kind !== "codeblock") {
+              throw Error(`kind is not codeblock. kind: ${context.tasks[0].kind}`);
+            }
+            return {
+              context,
+              task: context.tasks[0],
+            };
+          },
           onDone: {
             target: "popTask",
           },
@@ -276,10 +324,15 @@ const machine = setup(
       executeShellScript: {
         invoke: {
           src: "executeShellScript",
-          input: ({ context }) => ({
-            context,
-            task: context.tasks[0],
-          }),
+          input: ({ context }) => {
+            if (context.tasks[0].kind !== "codeblock") {
+              throw Error(`kind is not codeblock. kind: ${context.tasks[0].kind}`);
+            }
+            return {
+              context,
+              task: context.tasks[0],
+            };
+          },
           onDone: {
             target: "popTask",
           },
@@ -288,10 +341,32 @@ const machine = setup(
       executeBrewfile: {
         invoke: {
           src: "executeBrewfile",
-          input: ({ context }) => ({
-            context,
-            task: context.tasks[0],
-          }),
+          input: ({ context }) => {
+            if (context.tasks[0].kind !== "codeblock") {
+              throw Error(`kind is not codeblock. kind: ${context.tasks[0].kind}`);
+            }
+            return {
+              context,
+              task: context.tasks[0],
+            };
+          },
+          onDone: {
+            target: "popTask",
+          },
+        },
+      },
+      createSymlink: {
+        invoke: {
+          src: "createSymlink",
+          input: ({ context }) => {
+            if (context.tasks[0].kind !== "createSymlink") {
+              throw Error(`kind is not createSymlink. kind: ${context.tasks[0].kind}`);
+            }
+            return {
+              context,
+              task: context.tasks[0],
+            };
+          },
           onDone: {
             target: "popTask",
           },

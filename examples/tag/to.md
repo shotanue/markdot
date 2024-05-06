@@ -12,6 +12,6 @@ experimental = true
 
 It just copies without codeblock execution.
 
-```sh ::to=~/.config/markdot-test/sample.sh
+```sh ::to=~/.config/markdot-test/sample.sh ::permission=755
 echo "this is setup script"
 ```

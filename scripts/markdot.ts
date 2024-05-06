@@ -28,13 +28,6 @@ try {
 
   log.success("done");
 } catch (obj) {
-  if (obj instanceof Error) {
-    log.error("[error]");
-    log.error(obj.message, { label: false });
-    log.error("[trace]");
-    log.error(obj.stack ?? "", { label: false });
-  } else {
-    log.error(JSON.stringify(obj));
-  }
+  console.error(obj);
   process.exit(1);
 }
