@@ -6,7 +6,7 @@
   "version": "0.0.9",
   "devDependencies": {
     "@biomejs/biome": "1.7.3",
-    "@types/mdast": "4.0.3",
+    "@types/mdast": "4.0.4",
     "@types/mustache": "4.2.5",
     "bun-types": "1.1.8"
   },
