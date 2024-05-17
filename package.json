@@ -3,7 +3,7 @@
   "name": "markdot",
   "module": "index.ts",
   "type": "module",
-  "version": "0.0.9",
+  "version": "0.0.11",
   "devDependencies": {
     "@biomejs/biome": "1.7.3",
     "@types/mdast": "4.0.4",
