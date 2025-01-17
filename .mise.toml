@@ -20,7 +20,7 @@
 # mise.path = "./node_modules/.bin" # add a directory to PATH
 #
 [tools]
-bun = '1.1.43'
+bun = '1.1.44'
 # terraform = '1.0.0'       # specify a single version
 # erlang = '26'             # specify a major version only
 # node = 'ref:master'       # build from a git ref
