@@ -303,8 +303,8 @@ markdot --help
 
 ## Development
 
-### requirements
+### Requirements
 
-- [bun.sh](https://bun.sh/)
+- [bun.sh](https://bun.sh/) - Fast JavaScript runtime and package manager
 
 
