@@ -1,0 +1,19 @@
+FROM oven/bun:1.2.8
+
+# 必要なパッケージをインストール
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    bats \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# プロジェクトファイルをコピー
+COPY . .
+
+# 依存関係をインストール
+RUN bun install
+
+# テスト実行
+CMD ["sh", "-c", "bun test && bats bats/*.bats"]

@@ -33,6 +33,8 @@
   "scripts": {
     "markdot": "bun run ./scripts/markdot.ts",
     "test": "bun test",
+    "test:cli": "bats bats/*.bats",
+    "test:all": "bun test && bats bats/*.bats",
     "build": "bun build ./scripts/markdot.ts --compile --minify --outfile markdot",
     "check": "biome check . && tsc",
     "check:fix": "biome check --apply-unsafe . && tsc",
