@@ -307,4 +307,12 @@ markdot --help
 
 - [bun.sh](https://bun.sh/)
 
+### Testing
+
+Unit tests can be run with `pnpm test` which uses Bun's test runner.
+CLI tests can be run with `pnpm test:cli` which uses Bats.
+Run all tests with `pnpm test:all`.
+
+You can also run tests in Docker with `./docker-test.sh`.
+
 
