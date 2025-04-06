@@ -303,7 +303,7 @@ markdot --help
 
 ## Development
 
-### requirements
+### Requirements
 
 - [bun.sh](https://bun.sh/)
 
