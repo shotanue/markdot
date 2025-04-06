@@ -11,19 +11,13 @@ jobs:
       - name: Checkout 
         uses: actions/checkout@v4
       
-      - name: Setup bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.2.8
+      - name: Setup mise
+        uses: jdx/mise-action@v2
       
       - name: Install dependencies
-        run: bun install
-      
-      - name: Install bats
         run: |
-          git clone https://github.com/bats-core/bats-core.git
-          cd bats-core
-          ./install.sh /usr/local
+          mise install
+          bun install
       
       - name: Run unit tests
         run: bun test
