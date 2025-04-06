@@ -137,9 +137,9 @@ describe("::ignore", () => {
       inspect: (event) => {
         if (
           event.type === "@xstate.actor" &&
-          !(event.rootId === event.actorRef.id || /ignore$/.test(event.actorRef.id))
+          !(event.rootId === event.actorRef.sessionId || /ignore$/.test(event.actorRef.sessionId))
         ) {
-          throw Error(`unexpected actor runs:${event.actorRef.id}`);
+          throw Error(`unexpected actor runs:${event.actorRef.sessionId}`);
         }
       },
     });
@@ -181,9 +181,9 @@ describe("::to", () => {
       inspect: (event) => {
         if (
           event.type === "@xstate.actor" &&
-          !(event.rootId === event.actorRef.id || /copyCodeBlock$/.test(event.actorRef.id))
+          !(event.rootId === event.actorRef.sessionId || /copyCodeBlock$/.test(event.actorRef.sessionId))
         ) {
-          throw Error(`unexpected actor runs:${event.actorRef.id}`);
+          throw Error(`unexpected actor runs:${event.actorRef.sessionId}`);
         }
       },
     });
