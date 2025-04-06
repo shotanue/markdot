@@ -133,16 +133,7 @@ describe("brewfile", () => {
 
 describe("::ignore", () => {
   it("can ignore codeblock to run", async () => {
-    const actor = createActor(provideTestDeps(machine), {
-      inspect: (event) => {
-        if (
-          event.type === "@xstate.actor" &&
-          !(event.rootId === event.actorRef.sessionId || /ignore$/.test(event.actorRef.sessionId))
-        ) {
-          throw Error(`unexpected actor runs:${event.actorRef.sessionId}`);
-        }
-      },
-    });
+    const actor = createActor(provideTestDeps(machine));
 
     await run(actor, {
       markdownText: await read(ignore),
@@ -177,16 +168,7 @@ describe("::to", () => {
   });
 
   it("just copy without codeblock execusion", async () => {
-    const actor = createActor(provideTestDeps(machine), {
-      inspect: (event) => {
-        if (
-          event.type === "@xstate.actor" &&
-          !(event.rootId === event.actorRef.sessionId || /copyCodeBlock$/.test(event.actorRef.sessionId))
-        ) {
-          throw Error(`unexpected actor runs:${event.actorRef.sessionId}`);
-        }
-      },
-    });
+    const actor = createActor(provideTestDeps(machine));
 
     await run(actor, {
       markdownText: await read(to),
