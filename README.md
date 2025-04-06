@@ -305,6 +305,6 @@ markdot --help
 
 ### Requirements
 
-- [bun.sh](https://bun.sh/) - Fast JavaScript runtime and package manager
+- [bun.sh](https://bun.sh/)
 
 
