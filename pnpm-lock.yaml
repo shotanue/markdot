@@ -64,8 +64,8 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
       '@types/mustache':
-        specifier: 4.2.5
-        version: 4.2.5
+        specifier: 4.2.6
+        version: 4.2.6
       bun-types:
         specifier: 1.2.10
         version: 1.2.10
@@ -134,8 +134,8 @@ packages:
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
-  '@types/mustache@4.2.5':
-    resolution: {integrity: sha512-PLwiVvTBg59tGFL/8VpcGvqOu3L4OuveNvPi0EYbWchRdEVP++yRUXJPFl+CApKEq13017/4Nf7aQ5lTtHUNsA==}
+  '@types/mustache@4.2.6':
+    resolution: {integrity: sha512-t+8/QWTAhOFlrF1IVZqKnMRJi84EgkIK5Kh0p2JV4OLywUvCwJPFxbJAl7XAow7DVIHsF+xW9f1MVzg0L6Szjw==}
 
   '@types/node@22.14.0':
     resolution: {integrity: sha512-Kmpl+z84ILoG+3T/zQFyAJsU6EPTmOCj8/2+83fSN6djd6I4o7uOuGIH6vq3PrjY5BGitSbFuMN18j3iknubbA==}
@@ -467,7 +467,7 @@ snapshots:
 
   '@types/ms@2.1.0': {}
 
-  '@types/mustache@4.2.5': {}
+  '@types/mustache@4.2.6': {}
 
   '@types/node@22.14.0':
     dependencies:
