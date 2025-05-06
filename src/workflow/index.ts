@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import type { ScheduledActor } from "../actors";
 import { copyCodeBlock } from "../actors/copyCodeBlock";
+import { createHardCopy } from "../actors/createHardCopy";
 import { createSymlink } from "../actors/createSymlink";
 import { executeBrewfile } from "../actors/executeBrewfile";
 import { executeShellScript } from "../actors/executeShellScript";
@@ -35,7 +36,17 @@ type CreateSymlink = {
   }[];
 };
 
-export type Task = CodeBlockTask | CreateSymlink;
+type CreateHardCopy = {
+  kind: "createHardCopy";
+  from: string;
+  to: string;
+  fragments: {
+    depth: number;
+    text: string;
+  }[];
+};
+
+export type Task = CodeBlockTask | CreateSymlink | CreateHardCopy;
 
 type Context = {
   markdownText: string;
@@ -183,6 +194,10 @@ const scheduleTasks = ({
 
     if (task.kind === "createSymlink") {
       schedule.push(createSymlink({ from: task.from, to: task.to }));
+    }
+
+    if (task.kind === "createHardCopy") {
+      schedule.push(createHardCopy({ from: task.from, to: task.to }));
     }
   }
 

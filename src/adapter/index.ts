@@ -3,6 +3,7 @@ export { write } from "./write";
 export { exec } from "./exec";
 export { log } from "./log";
 export { createSymlink } from "./symlink";
+export { createHardCopy } from "./hard-copy";
 
 export type { Adapter };
 type Adapter = {
@@ -11,6 +12,7 @@ type Adapter = {
   exec: (args: { command: string[]; stdin: string; env: Record<string, string>; log: Logger }) => Promise<void>;
   log: Logger;
   createSymlink: (args: { from: string; to: string }) => Promise<void>;
+  createHardCopy: (args: { from: string; to: string }) => Promise<void>;
 };
 
 type Logger = {
