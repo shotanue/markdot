@@ -4,19 +4,17 @@
   "module": "index.ts",
   "type": "module",
   "version": "0.0.11",
-  "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@types/mdast": "4.0.4",
-    "@types/mustache": "4.2.6",
-    "bun-types": "1.2.10"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
+  "scripts": {
+    "markdot": "bun run ./scripts/markdot.ts",
+    "test": "bun test",
+    "build": "bun build ./scripts/markdot.ts --compile --minify --outfile markdot",
+    "check": "biome check . && tsc",
+    "check:fix": "biome check --apply-unsafe . && tsc",
+    "ci": "biome ci . && tsc && bun test"
   },
   "dependencies": {
     "arg": "5.0.2",
     "chalk-template": "1.1.0",
-    "immer": "10.1.1",
     "mustache": "4.2.0",
     "remark-breaks": "4.0.0",
     "remark-frontmatter": "5.0.0",
@@ -26,16 +24,13 @@
     "unified": "11.0.5",
     "unist-util-flat-filter": "2.0.0",
     "unist-util-visit": "5.0.0",
-    "xstate": "5.19.2",
     "yaml": "2.7.1",
     "zod": "3.24.4"
   },
-  "scripts": {
-    "markdot": "bun run ./scripts/markdot.ts",
-    "test": "bun test",
-    "build": "bun build ./scripts/markdot.ts --compile --minify --outfile markdot",
-    "check": "biome check . && tsc",
-    "check:fix": "biome check --apply-unsafe . && tsc",
-    "ci": "biome ci . && tsc && bun test"
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/mdast": "4.0.4",
+    "@types/mustache": "4.2.6",
+    "bun-types": "1.2.10"
   }
 }

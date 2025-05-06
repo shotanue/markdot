@@ -1,18 +1,34 @@
-import type { Adapter } from "../adapter";
+import type { Actor } from "./index";
 
 export { copyCodeBlock };
 
-type CopyCodeBlock = (args: {
+type CopyCodeBlock = Actor<{
   text: string;
   to: string;
-  write: Adapter["write"];
   permission?: number;
-}) => Promise<void>;
+}>;
 
-const copyCodeBlock: CopyCodeBlock = async ({ text, to, write, permission }) => {
-  await write({
-    input: text,
-    path: to,
-    permission,
-  });
+const copyCodeBlock: CopyCodeBlock = ({ text, to, permission }) => {
+  return {
+    kind: "copyCodeBlock",
+    info: {
+      text,
+      to,
+      permission,
+    },
+    run: async ({ write, log }) => {
+      try {
+        await write({
+          input: text,
+          path: to,
+          permission,
+        });
+      } catch (e) {
+        log.error(`Failed writing. path: ${to}`);
+        throw e;
+      }
+
+      log.info(`Success writing. path:${to}`);
+    },
+  };
 };

@@ -1,25 +1,44 @@
-import type { Adapter } from "../adapter";
+import chalkTemplate from "chalk-template";
+import type { Actor } from ".";
 
 export { executeShellScript };
 
-type Execute = (args: {
+type Execute = Actor<{
   code: string;
   lang: string;
-  exec: Adapter["exec"];
-  log: Adapter["log"];
   env: Record<string, string>;
-}) => Promise<void>;
+}>;
 
-const langAlias = new Map<string, string[]>();
-langAlias.set("nushell", ["nu", "/dev/stdin"]);
-langAlias.set("nu", ["nu", "/dev/stdin"]);
-langAlias.set("fish", ["fish", "/dev/stdin"]);
+const langAlias = {
+  nushell: ["nu", "/dev/stdin"],
+  nu: ["nu", "/dev/stdin"],
+  fish: ["fish", "/dev/stdin"],
+};
 
-const executeShellScript: Execute = async ({ code, lang, exec, env, log }) => {
-  await exec({
-    command: langAlias.get(lang) ?? [lang],
-    stdin: code,
-    env,
-    log,
-  });
+const executeShellScript: Execute = ({ code, lang, env }) => {
+  return {
+    kind: "executeShellScript",
+    info: {
+      code,
+      lang,
+    },
+    run: async ({ exec, log }) => {
+      const command = langAlias[lang as keyof typeof langAlias] ?? [lang];
+      const stdin = code;
+
+      log.info(chalkTemplate`[command] {dim ${[command, stdin].join(" ")}}`);
+
+      try {
+        await exec({
+          command,
+          stdin,
+          env,
+          log,
+        });
+      } catch (e) {
+        log.error(`Failed executing shell script. lang: ${lang}`);
+        throw e;
+      }
+    },
+  };
 };
