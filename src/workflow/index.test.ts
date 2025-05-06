@@ -218,7 +218,7 @@ describe("create symlink", () => {
     if (context.history[0].kind !== "createSymlink") {
       throw new Error("must be hyperlink");
     }
-    expect(context.history[0].from).toBe("~/Library/Application\\ Support/nushell");
-    expect(context.history[0].to).toBe("~/.config/nushell");
+    expect(context.history[0].from).toBe("~/.config/nushell");
+    expect(context.history[0].to).toBe("~/Library/Application\\ Support/nushell");
   });
 });
