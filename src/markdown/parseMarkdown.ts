@@ -53,8 +53,8 @@ const treeToTasks = (tree: Root) => {
       if (node.url !== firstChildren.value) {
         list.push({
           kind: "createSymlink",
-          from: firstChildren.value,
-          to: node.url,
+          from: node.url,
+          to: firstChildren.value,
           fragments,
         });
       }

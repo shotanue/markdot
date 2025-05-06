@@ -232,7 +232,7 @@ echo "ignored"
 You can create symlink with hyperlink syntax.
 
 ````markdown
-This example creates symlink to `~/.config/nushell` from `~/Library/Application Support/nushell`.
+The path in the square brackets `[]` is the **name for the symbolic link** to be created, and the path in the parentheses `()` is the **target (実体)** of the symbolic link.
 
 [~/Library/Application\ Support/nushell](~/.config/nushell)
 ````
