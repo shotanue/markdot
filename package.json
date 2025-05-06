@@ -3,7 +3,7 @@
   "name": "markdot",
   "module": "index.ts",
   "type": "module",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "scripts": {
     "markdot": "bun run ./scripts/markdot.ts",
     "test": "bun test",
