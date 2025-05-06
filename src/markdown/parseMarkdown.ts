@@ -59,16 +59,35 @@ const treeToTasks = (tree: Root) => {
         });
       }
     }
+
+    if (node.type === "image") {
+      const to = node.alt ?? "";
+      const from = node.url ?? "";
+
+      if (to === "" || from === "") {
+        throw new Error("image value must be text node");
+      }
+      list.push({
+        kind: "createHardCopy",
+        from,
+        to,
+        fragments,
+      });
+    }
   }
   return list;
 };
 
 const parseMarkdown = ({ markdownText, fragments }: { markdownText: string; fragments: string[] }) => {
+  if (!markdownText.trim()) {
+    return [];
+  }
+
   const parser = unified().use(remarkParse).use(remarkBreaks).use(remarkGfm);
   const mdast = parser.parse(markdownText);
 
   const flattenTree = flatFilter<Root>(mdast, (node) => {
-    return ["code", "heading", "link"].includes(node.type);
+    return ["code", "heading", "link", "image"].includes(node.type);
   });
 
   if (flattenTree === null) {
