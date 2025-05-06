@@ -1,0 +1,27 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+\
+# Project Structure Guide
+
+This document outlines the main directories and files in the `markdot` project.
+
+## Directories
+
+*   **`src/`**: Contains the main source code for the `markdot` application. ([src](mdc:src))
+*   **`examples/`**: Includes example files or use cases for `markdot`. These examples may also be utilized in test cases. ([examples](mdc:examples))
+*   **`scripts/`**: Contains utility scripts, including the main script for the application. ([scripts](mdc:scripts))
+*   **`.github/`**: Contains GitHub-specific files, such as workflow definitions for continuous integration. ([.github](mdc:.github))
+*   **`node_modules/`**: Stores project dependencies managed by the package manager. This directory is typically not version-controlled.
+
+## Key Files
+
+*   **`package.json`**: Defines project metadata, dependencies, and scripts for building, testing, and running the application. ([package.json](mdc:package.json))
+*   **`README.md`**: Provides a general overview of the project, setup instructions, and usage guidelines. ([README.md](mdc:README.md))
+*   **`tsconfig.json`**: Configuration file for the TypeScript compiler, specifying how TypeScript files should be compiled. ([tsconfig.json](mdc:tsconfig.json))
+*   **`bunfig.toml`**: Configuration file for Bun, the JavaScript runtime and toolkit used in this project. ([bunfig.toml](mdc:bunfig.toml))
+*   **`LICENSE`**: Contains the software license information for the project. ([LICENSE](mdc:LICENSE))
+*   **`.gitignore`**: Specifies intentionally untracked files that Git should ignore. ([.gitignore](mdc:.gitignore))
+*   **`biome.json`**: Configuration for Biome, a toolchain for web development, used here for linting and formatting. ([biome.json](mdc:biome.json))
