@@ -1,0 +1,39 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Coding Standards Guide
+
+This document outlines the coding standards and conventions used in the `markdot` project. Adhering to these standards ensures code consistency, readability, and maintainability.
+
+## TypeScript Configuration
+
+The project uses TypeScript. The TypeScript compiler options are defined in [`tsconfig.json`](mdc:tsconfig.json). Key aspects of this configuration include:
+
+*   **Module System**: The project uses ES modules (`"module": "esnext"` or similar, depending on the `target`).
+*   **Strict Checks**: Strict type-checking options are typically enabled (e.g., `"strict": true`) to catch errors early.
+*   **Target Output**: The JavaScript output target (e.g., `"target": "es2022"`) ensures compatibility with modern JavaScript environments.
+
+Refer to [`tsconfig.json`](mdc:tsconfig.json) for the complete and up-to-date configuration.
+
+## Linting and Formatting
+
+The project uses [Biome](mdc:https:/biomejs.dev) for linting and formatting. The configuration for Biome is stored in [`biome.json`](mdc:biome.json).
+
+*   **Formatting**: Biome automatically formats the code to ensure a consistent style. It's recommended to integrate Biome with your editor for auto-formatting on save.
+*   **Linting**: Biome also performs linting to catch potential errors and enforce coding best practices.
+
+### Key Scripts
+
+*   **`bun run check`**: Runs Biome to check for formatting and linting issues, and also runs `tsc` for type checking.
+*   **`bun run check:fix`**: Runs Biome to automatically fix formatting and linting issues, and then runs `tsc`.
+*   **`bun run ci`**: Used in CI environments, this script runs Biome in a stricter mode and also performs type checking and runs tests.
+
+It is expected that code passes all checks defined in `bun run check` before being committed or merged.
+
+## General Guidelines
+
+*   Follow the established coding style enforced by Biome.
+*   Write clear and concise comments where necessary, especially for complex logic or public APIs.
+*   Ensure that your code is well-typed and leverages TypeScript's features for better code quality.

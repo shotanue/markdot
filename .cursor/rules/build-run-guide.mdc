@@ -1,0 +1,45 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+\
+# Build and Run Guide
+
+This guide explains how to build, run, and test the `markdot` project using the scripts defined in [`package.json`](mdc:package.json).
+
+## Available Scripts
+
+The following scripts are available via `bun run <script_name>`:
+
+*   **`markdot`**: Executes the main application script located at `scripts/markdot.ts`. This is the primary way to run the application.
+    *   Example: `bun run markdot [arguments]`
+*   **`test`**: Runs the test suite for the project.
+    *   Example: `bun run test`
+*   **`build`**: Compiles the main application script (`scripts/markdot.ts`) into a single executable file named `markdot` in the project root. This script uses Bun's bundler with minification.
+    *   Example: `bun run build`
+    *   After building, you can run the compiled application directly: `./markdot [arguments]`
+*   **`check`**: Performs static analysis on the codebase. It runs Biome for linting and formatting checks, and `tsc` (TypeScript compiler) for type checking.
+    *   Example: `bun run check`
+*   **`check:fix`**: Similar to `check`, but also attempts to automatically fix any linting or formatting issues found by Biome.
+    *   Example: `bun run check:fix`
+*   **`ci`**: This script is intended for Continuous Integration environments. It runs Biome for strict checks, `tsc` for type checking, and finally, the test suite.
+    *   Example: `bun run ci`
+
+## Main Application
+
+The main entry point for the application is [`scripts/markdot.ts`](mdc:scripts/markdot.ts).
+
+To run the application in development:
+```bash
+bun run markdot -- [your-markdot-arguments]
+```
+
+To build the application for production:
+```bash
+bun run build
+```
+Then run the compiled executable:
+```bash
+./markdot [your-markdot-arguments]
+```
