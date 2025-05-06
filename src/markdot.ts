@@ -1,29 +1,15 @@
 export { markdot };
 
-import { createActor } from "xstate";
-import { machine } from "./workflow";
+import * as adapter from "./adapter";
+import { scheduleTasks } from "./workflow";
 
-const markdot = (args: { markdownText: string; fragments: string[] }): Promise<void> => {
-  const actor = createActor(machine);
-
-  const running = new Promise<void>((resolve, reject) => {
-    actor.start().subscribe({
-      complete: () => {
-        if (actor.getSnapshot().value === "error") {
-          console.error("error");
-          console.error(actor.getSnapshot().context.history);
-          reject();
-          return;
-        }
-        resolve();
-      },
-      error: (err) => {
-        reject(err);
-      },
-    });
-
-    actor.send({ type: "run", params: { markdownText: args.markdownText, fragments: args.fragments } });
+const markdot = async ({ markdownText, fragments }: { markdownText: string; fragments: string[] }): Promise<void> => {
+  const tasksToRun = scheduleTasks({
+    markdownText,
+    fragments,
   });
 
-  return running;
+  for (const actor of tasksToRun) {
+    await actor.run(adapter);
+  }
 };

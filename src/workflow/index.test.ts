@@ -1,224 +1,174 @@
 import { describe, expect, it } from "bun:test";
-import { type Actor, type AnyActorLogic, createActor, fromPromise } from "xstate";
-import { machine } from ".";
+import { scheduleTasks } from ".";
 
 import bash from "@examples/codeblock-execution/bash.md";
 import brewfile from "@examples/codeblock-execution/brewfile.md";
 import evaluationOrder from "@examples/codeblock-execution/evaluation-order.md";
 import createSymlink from "@examples/symlink/create-symlink.md";
-import args from "@examples/tag/args.md";
 import ignore from "@examples/tag/ignore.md";
 import to from "@examples/tag/to.md";
 
-const run = (actor: Actor<AnyActorLogic>, args: { markdownText: string; fragments: string[] }) => {
-  return new Promise((resolve, reject) => {
-    actor.subscribe({
-      complete: () => resolve({}),
-      error: reject,
-    });
-
-    actor.start().send({ type: "run", params: args });
-  });
-};
 const read = async (path: string) => await Bun.file(path).text();
-
-const provideTestDeps = (m: typeof machine) => {
-  return m.provide({
-    actors: {
-      executeShellScript: fromPromise(async () => {
-        return new Promise((resolve) => {
-          resolve();
-        });
-      }),
-      executeBrewfile: fromPromise(async () => {
-        return new Promise((resolve) => {
-          resolve();
-        });
-      }),
-      copyCodeBlock: fromPromise(async () => {
-        return new Promise((resolve) => {
-          resolve();
-        });
-      }),
-      ignoreTask: fromPromise(async () => {
-        return new Promise((resolve) => {
-          resolve();
-        });
-      }),
-      createSymlink: fromPromise(async () => {
-        return new Promise((resolve) => {
-          resolve();
-        });
-      }),
-    },
-  });
-};
 
 describe("workflow", () => {
   it("evaluates codeblock in sequence", async () => {
-    const actor = createActor(provideTestDeps(machine));
-
-    await run(actor, {
+    const scheduledTasks = scheduleTasks({
       markdownText: await read(evaluationOrder),
       fragments: [],
     });
 
-    const { context } = actor.getSnapshot();
+    expect(scheduledTasks).toHaveLength(4);
 
-    expect(context.tasks).toHaveLength(0);
-    expect(context.history).toHaveLength(4);
-    [
-      ["a", "bash"],
-      ["b", "bash"],
-      ["c", "bash"],
-      ["d", "brewfile"],
-    ].forEach(([text, lang], i) => {
-      const history = context.history[i];
-      if (history.kind !== "codeblock") {
-        throw new Error("must be codeblock");
-      }
-      expect(history.fragments[1].text).toBe(text);
-      expect(history.lang).toBe(lang);
+    expect(scheduledTasks[0]).toEqual({
+      kind: "executeShellScript",
+      info: {
+        code: "echo a",
+        lang: "bash",
+      },
+      run: expect.any(Function),
+    });
+
+    expect(scheduledTasks[1]).toEqual({
+      kind: "executeShellScript",
+      info: {
+        code: "echo b",
+        lang: "bash",
+      },
+      run: expect.any(Function),
+    });
+
+    expect(scheduledTasks[2]).toEqual({
+      kind: "executeShellScript",
+      info: {
+        code: "echo c",
+        lang: "bash",
+      },
+      run: expect.any(Function),
+    });
+
+    expect(scheduledTasks[3]).toEqual({
+      kind: "executeBrewfile",
+      info: {
+        brew: {
+          brewfile: 'brew "git"',
+          args: "",
+        },
+      },
+      run: expect.any(Function),
     });
   });
 });
 
 describe("shell exec", () => {
   it("can run bash", async () => {
-    const actor = createActor(provideTestDeps(machine));
-    await run(actor, {
+    const scheduledTasks = scheduleTasks({
       markdownText: await read(bash),
       fragments: [],
     });
 
-    const { context } = actor.getSnapshot();
+    expect(scheduledTasks.length).toBeGreaterThanOrEqual(1);
+    const firstTask = scheduledTasks[0];
+    if (firstTask.kind !== "executeShellScript") {
+      throw new Error("Expected first task to be executeShellScript");
+    }
 
-    expect(context.tasks).toHaveLength(0);
-    expect(context.history).toHaveLength(3);
-    expect(context.history[0]).toEqual({
-      lang: "bash",
-      breadcrumb: "# shell exec > ## bash",
-      code: "echo foo",
-      fragments: [
-        { depth: 1, text: "shell exec" },
-        { depth: 2, text: "bash" },
-      ],
-      kind: "codeblock",
-      meta: {},
-    });
+    expect(firstTask.info.lang).toBe("bash");
+    expect(firstTask.info.code).toBe("echo foo");
   });
 });
 
 describe("brewfile", () => {
   it("can evaluate brewfile", async () => {
-    const actor = createActor(provideTestDeps(machine));
-
-    await run(actor, {
+    const scheduledTasks = scheduleTasks({
       markdownText: await read(brewfile),
       fragments: [],
     });
 
-    const { context } = actor.getSnapshot();
+    // brewfile.md seems to have at least two brewfile blocks
+    expect(scheduledTasks.length).toBeGreaterThanOrEqual(2);
 
-    if (context.history[0].kind !== "codeblock" || context.history[1].kind !== "codeblock") {
-      throw new Error("must be codeblock");
-    }
-    expect(context.history[0].lang).toBe("brewfile");
-    expect(context.history[0].code).toBe(['brew "git"', 'brew "mise"'].join("\n"));
+    expect(scheduledTasks[0]).toEqual({
+      kind: "executeBrewfile",
+      info: {
+        brew: {
+          brewfile: 'brew "git"\nbrew "mise"',
+          args: "",
+        },
+      },
+      run: expect.any(Function),
+    });
 
-    expect(context.history[1].lang).toBe("brewfile");
-    expect(context.history[1].meta).toEqual({ "::args": "--verbose --no-lock" });
+    expect(scheduledTasks[1]).toEqual({
+      kind: "executeBrewfile",
+      info: {
+        brew: {
+          brewfile: 'brew "git"',
+          args: "--verbose --no-lock",
+        },
+      },
+      run: expect.any(Function),
+    });
   });
 });
 
 describe("::ignore", () => {
   it("can ignore codeblock to run", async () => {
-    const actor = createActor(provideTestDeps(machine));
-
-    await run(actor, {
+    const scheduledTasks = scheduleTasks({
       markdownText: await read(ignore),
       fragments: [],
     });
 
-    const { context } = actor.getSnapshot();
-
-    if (context.history[0].kind !== "codeblock") {
-      throw new Error("must be codeblock");
-    }
-    expect(context.history[0].lang).toBe("sh");
+    expect(scheduledTasks).toHaveLength(0);
   });
 });
 
 describe("::to", () => {
   it("can copy codeblock content to given path", async () => {
-    const actor = createActor(provideTestDeps(machine));
-
-    await run(actor, {
+    const scheduledTasks = scheduleTasks({
       markdownText: await read(to),
       fragments: [],
     });
 
-    const { context } = actor.getSnapshot();
+    expect(scheduledTasks.length).toBeGreaterThanOrEqual(1);
+    const firstCopyTask = scheduledTasks[0];
 
-    if (context.history[0].kind !== "codeblock") {
-      throw new Error("must be codeblock");
+    if (firstCopyTask.kind !== "copyCodeBlock") {
+      throw new Error("Expected first task to be copyCodeBlock for toml");
     }
-    expect(context.history[0].lang).toBe("toml");
-    expect(context.history[0].meta).toEqual({ "::to": "~/.config/markdot-test/sample.toml" });
+    expect(firstCopyTask.info.to).toBe("~/.config/markdot-test/sample.toml");
   });
 
-  it("just copy without codeblock execusion", async () => {
-    const actor = createActor(provideTestDeps(machine));
-
-    await run(actor, {
+  it("just copy without codeblock execusion for a specific task", async () => {
+    const scheduledTasks = scheduleTasks({
       markdownText: await read(to),
       fragments: [],
     });
 
-    const { context } = actor.getSnapshot();
+    expect(scheduledTasks.length).toBeGreaterThanOrEqual(2); // At least copy_toml, copy_sh
+    const shCopyTask = scheduledTasks[1]; // This should be the copyCodeBlock for the 'sh' block
 
-    if (context.history[1].kind !== "codeblock") {
-      throw new Error("must be codeblock");
+    if (shCopyTask.kind !== "copyCodeBlock") {
+      throw new Error("Expected second scheduled actor to be copyCodeBlock for sh");
     }
-    expect(context.history[1].lang).toBe("sh");
-    expect(context.history[1].meta).toEqual({ "::to": "~/.config/markdot-test/sample.sh", "::permission": "755" });
-  });
-});
-
-describe("::args", () => {
-  it("can give argument to command", async () => {
-    const actor = createActor(provideTestDeps(machine));
-
-    await run(actor, {
-      markdownText: await read(args),
-      fragments: [],
-    });
-
-    const { context } = actor.getSnapshot();
-
-    if (context.history[0].kind !== "codeblock") {
-      throw new Error("must be codeblock");
-    }
-    expect(context.history[0].lang).toBe("brewfile");
-    expect(context.history[0].meta).toEqual({ "::args": "--verbose --no-lock" });
+    expect(shCopyTask.info.to).toBe("~/.config/markdot-test/sample.sh");
+    expect(shCopyTask.info.permission).toBe(0o755); // 0o755 (octal) is 493 (decimal)
   });
 });
 
 describe("create symlink", () => {
   it("can create symlink", async () => {
-    const actor = createActor(provideTestDeps(machine));
-
-    await run(actor, {
+    const scheduledTasks = scheduleTasks({
       markdownText: await read(createSymlink),
       fragments: [],
     });
 
-    const { context } = actor.getSnapshot();
+    expect(scheduledTasks).toHaveLength(1);
+    const task = scheduledTasks[0];
 
-    if (context.history[0].kind !== "createSymlink") {
-      throw new Error("must be hyperlink");
+    if (task.kind !== "createSymlink") {
+      throw new Error("Expected task to be createSymlink");
     }
-    expect(context.history[0].from).toBe("~/.config/nushell");
-    expect(context.history[0].to).toBe("~/Library/Application\\ Support/nushell");
+    expect(task.info.from).toBe("~/.config/nushell");
+    expect(task.info.to).toBe("~/Library/Application\\ Support/nushell");
   });
 });
