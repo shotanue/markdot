@@ -13,8 +13,6 @@ jobs:
         include:
           - os: ubuntu-22.04
             asset_name: markdot-linux-amd64
-          - os: macos-12
-            asset_name: markdot-darwin-amd64
           - os: macos-13-xlarge
             asset_name: markdot-darwin-arm64
 
