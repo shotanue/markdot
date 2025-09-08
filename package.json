@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "arg": "5.0.2",
-    "chalk-template": "1.1.0",
+    "chalk-template": "1.1.2",
     "mustache": "4.2.0",
     "remark-breaks": "4.0.0",
     "remark-frontmatter": "5.0.0",
