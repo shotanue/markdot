@@ -30,8 +30,8 @@ importers:
         specifier: 11.0.0
         version: 11.0.0
       smol-toml:
-        specifier: 1.4.2
-        version: 1.4.2
+        specifier: 1.5.0
+        version: 1.5.0
       unified:
         specifier: 11.0.5
         version: 11.0.5
@@ -359,8 +359,8 @@ packages:
   remark-stringify@11.0.0:
     resolution: {integrity: sha512-1OSmLd3awB/t8qdoEOMazZkNsfVTeY4fTsgzcQFdXNq8ToTN4ZGwrMnlda4K6smTFKD+GRV6O48i6Z4iKgPPpw==}
 
-  smol-toml@1.4.2:
-    resolution: {integrity: sha512-rInDH6lCNiEyn3+hH8KVGFdbjc099j47+OSgbMrfDYX1CmXLfdKd7qi6IfcWj2wFxvSVkuI46M+wPGYfEOEj6g==}
+  smol-toml@1.5.0:
+    resolution: {integrity: sha512-Jjsa8LZ+DyLbZ7gVi9d18bS8oxq0PQrTlVDfvYXgh7gxLwbW9QWgvakHD+hBLUtr5NahfStd8LQLGSPchaEJ8Q==}
     engines: {node: '>= 18'}
 
   trough@2.2.0:
@@ -881,7 +881,7 @@ snapshots:
       mdast-util-to-markdown: 2.1.2
       unified: 11.0.5
 
-  smol-toml@1.4.2: {}
+  smol-toml@1.5.0: {}
 
   trough@2.2.0: {}
 
