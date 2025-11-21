@@ -25,7 +25,7 @@ jobs:
           echo "Operating System: ${{ runner.os }}"
           echo "CPU Architecture: ${{ runner.arch}}"
       - name: Checkout 
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
         with:
