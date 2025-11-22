@@ -35,7 +35,7 @@ describe('markdot binary', () => {
     it('should execute and show version', async () => {
         const { stdout, stderr } = await runBinary(['--version']);
         const output = stdout + stderr;
-        expect(output).toContain('0.0.12');
+        expect(output).toContain(version);
     });
 
     it('should execute and show help', async () => {
