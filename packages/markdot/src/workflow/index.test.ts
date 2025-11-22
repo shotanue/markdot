@@ -1,12 +1,11 @@
 import { describe, expect, it } from "bun:test";
-import { scheduleTasks } from ".";
-
 import bash from "@examples/codeblock-execution/bash.md";
 import brewfile from "@examples/codeblock-execution/brewfile.md";
 import evaluationOrder from "@examples/codeblock-execution/evaluation-order.md";
 import createSymlink from "@examples/symlink/create-symlink.md";
 import ignore from "@examples/tag/ignore.md";
 import to from "@examples/tag/to.md";
+import { scheduleTasks } from ".";
 
 const read = async (path: string) => await Bun.file(path).text();
 

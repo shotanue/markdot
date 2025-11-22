@@ -1,4 +1,4 @@
-export { parseArguments, getStdin } from "./input";
 export { log } from "./adapter";
 export { helpText } from "./helpText";
+export { getStdin, parseArguments } from "./input";
 export { markdot } from "./markdot";

@@ -1,4 +1,5 @@
 export { parseArguments };
+
 import arg from "arg";
 
 type ParseArguments = (

@@ -13,14 +13,14 @@ describe("getStdin", () => {
       return readable;
     };
 
-    // @ts-ignore
+    // @ts-expect-error
     const result = await getStdin(false, mockStream);
     expect(result).toEqual(sampleData);
   });
 
   it("should return an empty string when isTTY is true", async () => {
     const mockStream = () => new Readable();
-    // @ts-ignore
+    // @ts-expect-error
     const result = await getStdin(true, mockStream);
     expect(result).toEqual("");
   });
