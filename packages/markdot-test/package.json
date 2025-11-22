@@ -2,7 +2,8 @@
     "name": "markdot-test",
     "private": true,
     "scripts": {
-        "test": "vitest"
+        "test": "vitest",
+        "ci": "vitest run"
     },
     "devDependencies": {
         "vitest": "^2.1.8"

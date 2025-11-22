@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
+import fs from 'node:fs';
+
+const packageJsonPath = path.resolve(__dirname, '../markdot/package.json');
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+const version = packageJson.version;
 
 const binaryPath = path.resolve(__dirname, '../markdot/markdot');
 
