@@ -185,3 +185,4 @@ bun.lockb
 markdot
 
 *.tsbuildinfo
+build.log

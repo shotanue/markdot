@@ -8,7 +8,8 @@
             "outputs": [
                 "dist/**",
                 "markdot"
-            ]
+            ],
+            "cache": false
         },
         "test": {
             "dependsOn": []
