@@ -22,7 +22,7 @@ const runBinary = (args: string[]): Promise<{ stdout: string; stderr: string; ex
         });
 
         proc.on('close', (exitCode) => {
-            resolve({ stdout, stderr, exitCode: exitCode ?? 0 });
+            resolve({ stdout, stderr, exitCode: exitCode ?? 1 });
         });
 
         proc.on('error', (error) => {
