@@ -1,22 +1,47 @@
 import { describe, it, expect } from 'vitest';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { spawn } from 'node:child_process';
 import path from 'node:path';
-
-const execFileAsync = promisify(execFile);
 
 const binaryPath = path.resolve(__dirname, '../markdot/markdot');
 
+const runBinary = (args: string[]): Promise<{ stdout: string; stderr: string; exitCode: number }> => {
+    return new Promise((resolve, reject) => {
+        const proc = spawn(binaryPath, args, {
+            stdio: ['ignore', 'pipe', 'pipe'], // Ignore stdin, pipe stdout and stderr
+        });
+
+        let stdout = '';
+        let stderr = '';
+
+        proc.stdout.on('data', (data) => {
+            stdout += data.toString();
+        });
+
+        proc.stderr.on('data', (data) => {
+            stderr += data.toString();
+        });
+
+        proc.on('close', (exitCode) => {
+            resolve({ stdout, stderr, exitCode: exitCode ?? 1 });
+        });
+
+        proc.on('error', (error) => {
+            reject(error);
+        });
+    });
+};
+
 describe('markdot binary', () => {
-  it('should execute and show help or version', async () => {
-    try {
-      const { stdout } = await execFileAsync(binaryPath, ['--help']);
-      expect(stdout).toContain('Usage'); // Adjust expectation based on actual help output
-    } catch (error: any) {
-       // If the binary fails, we might want to know why. 
-       // But if it's just a non-zero exit code for help (some apps do that), we might need to adjust.
-       // For now assuming --help returns 0.
-       throw new Error(`Failed to execute binary: ${error.message}\nStderr: ${error.stderr}`);
-    }
-  });
+    it('should execute and show version', async () => {
+        const { stdout, stderr } = await runBinary(['--version']);
+        const output = stdout + stderr;
+        expect(output).toContain(version);
+    });
+
+    it('should execute and show help', async () => {
+        const { stdout, stderr } = await runBinary(['--help']);
+        const output = stdout + stderr;
+        expect(output).toContain('USAGE');
+        expect(output).toContain('markdot');
+    });
 });
