@@ -1,0 +1,10 @@
+{
+    "name": "markdot-test",
+    "private": true,
+    "scripts": {
+        "test": "vitest"
+    },
+    "devDependencies": {
+        "vitest": "^2.1.8"
+    }
+}
