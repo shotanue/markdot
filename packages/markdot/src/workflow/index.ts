@@ -138,7 +138,10 @@ const loadContext = ({ markdownText, fragments }: { markdownText: string; fragme
 const scheduleTasks = ({
   markdownText,
   fragments,
-}: { markdownText: string; fragments: string[] }): ScheduledActor[] => {
+}: {
+  markdownText: string;
+  fragments: string[];
+}): ScheduledActor[] => {
   const schedule: ScheduledActor[] = [];
 
   const context = loadContext({ markdownText, fragments });
@@ -169,7 +172,7 @@ const scheduleTasks = ({
         schedule.push(copyCodeBlock({ text, to, permission }));
       }
 
-      if (lang(task, ["sh", "bash", "zsh", "fish", "nushell", "nu"])) {
+      if (lang(task, ["sh", "bash", "zsh", "fish", "nushell", "nu"]) && !tag(task, "::to")) {
         schedule.push(
           executeShellScript({
             code: task.code,
