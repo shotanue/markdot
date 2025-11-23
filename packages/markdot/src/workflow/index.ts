@@ -138,7 +138,10 @@ const loadContext = ({ markdownText, fragments }: { markdownText: string; fragme
 const scheduleTasks = ({
   markdownText,
   fragments,
-}: { markdownText: string; fragments: string[] }): ScheduledActor[] => {
+}: {
+  markdownText: string;
+  fragments: string[];
+}): ScheduledActor[] => {
   const schedule: ScheduledActor[] = [];
 
   const context = loadContext({ markdownText, fragments });

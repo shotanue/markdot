@@ -18,11 +18,17 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Install Dependencies
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-dependencies]
+
       - name: Build Markdot
         run: |
-          cd packages/markdot
-          bun install
-          bun run build
+          pnpm run build --filter markdot
 
       - name: Create Test Brewfile Markdown
         run: |
