@@ -9,7 +9,6 @@ const binaryPath = path.resolve(__dirname, '../markdot/markdot');
 const packageJsonPath = path.resolve(__dirname, '../markdot/package.json');
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
 const version = packageJson.version;
-
 const runBinary = (args: string[]): Promise<{ stdout: string; stderr: string; exitCode: number }> => {
     return new Promise((resolve, reject) => {
         const proc = spawn(binaryPath, args, {
