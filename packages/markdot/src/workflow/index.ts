@@ -169,7 +169,7 @@ const scheduleTasks = ({
         schedule.push(copyCodeBlock({ text, to, permission }));
       }
 
-      if (lang(task, ["sh", "bash", "zsh", "fish", "nushell", "nu"])) {
+      if (lang(task, ["sh", "bash", "zsh", "fish", "nushell", "nu"]) && !tag(task, "::to")) {
         schedule.push(
           executeShellScript({
             code: task.code,

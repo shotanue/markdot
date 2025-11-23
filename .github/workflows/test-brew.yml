@@ -1,0 +1,43 @@
+name: Brew Test
+
+on:
+  push:
+    paths:
+      - 'packages/markdot/**'
+      - '.github/workflows/test-brew.yml'
+  workflow_dispatch:
+
+jobs:
+  test-brew:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Build Markdot
+        run: |
+          cd packages/markdot
+          bun install
+          bun run build
+
+      - name: Create Test Brewfile Markdown
+        run: |
+          cat <<EOF > test_brew.md
+          # Brew Test
+
+          \`\`\`brewfile
+          brew "hello"
+          \`\`\`
+          EOF
+
+      - name: Run Markdot
+        run: |
+          ./packages/markdot/markdot test_brew.md
+
+      - name: Verify Installation
+        run: |
+          brew list hello

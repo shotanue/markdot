@@ -1,0 +1,11 @@
+{
+    "name": "markdot-test",
+    "private": true,
+    "scripts": {
+        "test": "vitest",
+        "test:brew": "act -W .github/workflows/test-brew.yml"
+    },
+    "devDependencies": {
+        "vitest": "^4.0.0"
+    }
+}
