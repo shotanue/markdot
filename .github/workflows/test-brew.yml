@@ -1,0 +1,62 @@
+name: Brew Test
+
+on:
+  push:
+    paths:
+      - 'packages/markdot/**'
+      - '.github/workflows/test-brew.yml'
+  workflow_dispatch:
+
+jobs:
+  test-brew:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Homebrew (if missing)
+        run: |
+          if ! command -v brew &> /dev/null; then
+            echo "Brew not found, installing..."
+            NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+            # Add to path logic for Linux (Act environment)
+            if [ -d "/home/linuxbrew/.linuxbrew" ]; then
+              echo "eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\"" >> $GITHUB_ENV
+              eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            fi
+          fi
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-dependencies]
+
+      - name: Build Markdot
+        run: |
+          pnpm run build --filter markdot
+
+      - name: Create Test Brewfile Markdown
+        run: |
+          cat <<EOF > test_brew.md
+          # Brew Test
+
+          \`\`\`brewfile
+          brew "hello"
+          \`\`\`
+          EOF
+
+      - name: Run Markdot
+        run: |
+          ./packages/markdot/markdot test_brew.md
+
+      - name: Verify Installation
+        run: |
+          brew list hello
