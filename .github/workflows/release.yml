@@ -7,38 +7,59 @@ on:
 
 jobs:
   build:
-    name: Release binary
+    name: Build (${{ matrix.asset_name }})
     strategy:
       matrix:
         include:
           - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
             asset_name: markdot-linux-amd64
-          - os: macos-13-xlarge
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-musl
+            asset_name: markdot-linux-amd64-musl
+            deps: musl-tools
+          - os: ubuntu-22.04
+            target: aarch64-unknown-linux-gnu
+            asset_name: markdot-linux-arm64
+            use_cross: true
+          - os: ubuntu-22.04
+            target: aarch64-unknown-linux-musl
+            asset_name: markdot-linux-arm64-musl
+            use_cross: true
+          - os: macos-13
+            target: x86_64-apple-darwin
+            asset_name: markdot-darwin-amd64
+          - os: macos-14
+            target: aarch64-apple-darwin
             asset_name: markdot-darwin-arm64
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Build executable
-        run: |
-          echo "Runner Name: ${{ runner.name }}"
-          echo "Operating System: ${{ runner.os }}"
-          echo "CPU Architecture: ${{ runner.arch}}"
-      - name: Checkout 
+      - name: Checkout
         uses: actions/checkout@v6
-      - name: Setup bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.10
-
-      - run: bun install
-      - run: bun run build
- 
+      - name: Setup mise
+        uses: jdx/mise-action@v2
+      - name: Install system deps
+        if: matrix.deps
+        run: sudo apt-get update && sudo apt-get install -y ${{ matrix.deps }}
+      - name: Add target
+        run: rustup target add ${{ matrix.target }}
+      - name: Install cross
+        if: matrix.use_cross
+        run: cargo install cross
+      - name: Build
+        run: |
+          if [ "${{ matrix.use_cross }}" = "true" ]; then
+            cross build --release --target ${{ matrix.target }}
+          else
+            cargo build --release --target ${{ matrix.target }}
+          fi
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.11.4
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: markdot
+          file: target/${{ matrix.target }}/release/markdot
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
           overwrite: true
