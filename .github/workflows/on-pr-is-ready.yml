@@ -1,0 +1,13 @@
+name: On PR is ready
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  quality:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/quality

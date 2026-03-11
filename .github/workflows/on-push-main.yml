@@ -1,0 +1,29 @@
+name: On push to main
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/quality
+
+  brew-test:
+    runs-on: macos-15
+    steps:
+      - uses: ./.github/actions/setup
+      - run: cargo build --release
+      - name: Run brewfile test
+        run: |
+          cat <<EOF > test_brew.md
+          # Brew Test
+
+          \`\`\`brewfile
+          brew "hello"
+          \`\`\`
+          EOF
+          ./target/release/markdot test_brew.md
+      - run: brew list hello
