@@ -1,0 +1,21 @@
+name: Brew test
+description: Build markdot and test brewfile execution
+
+runs:
+  using: composite
+  steps:
+    - run: cargo build --release
+      shell: bash
+    - name: Run brewfile test
+      shell: bash
+      run: |
+        cat <<EOF > test_brew.md
+        # Brew Test
+
+        \`\`\`brewfile
+        brew "hello"
+        \`\`\`
+        EOF
+        ./target/release/markdot test_brew.md
+    - run: brew list hello
+      shell: bash

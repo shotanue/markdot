@@ -20,15 +20,4 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
-      - run: cargo build --release
-      - name: Run brewfile test
-        run: |
-          cat <<EOF > test_brew.md
-          # Brew Test
-
-          \`\`\`brewfile
-          brew "hello"
-          \`\`\`
-          EOF
-          ./target/release/markdot test_brew.md
-      - run: brew list hello
+      - uses: ./.github/actions/brew-test
