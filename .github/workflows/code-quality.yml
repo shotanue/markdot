@@ -8,11 +8,10 @@ jobs:
   quality:
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout 
+      - name: Checkout
         uses: actions/checkout@v6
-      - name: Setup bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.10
-      - run: bun install
-      - run: bun ci
+      - name: Setup mise
+        uses: jdx/mise-action@v2
+      - run: rustup component add clippy
+      - run: cargo clippy -- -D warnings
+      - run: cargo test
