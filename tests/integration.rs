@@ -178,7 +178,7 @@ fn test_fragment_filtering() {
 fn test_version_flag() {
     let output = run_markdot(&["--version"]);
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("markdot"), "should print version");
+    assert!(stdout.contains(env!("CARGO_PKG_VERSION")), "should print version");
 }
 
 #[test]
