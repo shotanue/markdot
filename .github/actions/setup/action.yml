@@ -1,8 +1,7 @@
 name: Setup
-description: Checkout and setup Rust toolchain via mise
+description: Setup Rust toolchain via mise
 
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v6
-    - uses: jdx/mise-action@v2
+    - uses: jdx/mise-action@v3
