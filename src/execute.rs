@@ -10,12 +10,21 @@ use crate::util::{log_error, log_info, resolve_tilde};
 pub fn execute(
     directive: &Directive,
     env: &HashMap<String, String>,
+    dry_run: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     match directive {
         Directive::ShellScript { code, lang } => {
+            if dry_run {
+                log_info(&format!("[dry-run] shell script ({lang}): {}", truncate(code, 80)));
+                return Ok(());
+            }
             execute_shell_script(code, lang, env)?;
         }
         Directive::Brewfile { code, args } => {
+            if dry_run {
+                log_info(&format!("[dry-run] brewfile (args: {args})"));
+                return Ok(());
+            }
             execute_brewfile(code, args, env)?;
         }
         Directive::WriteFile {
@@ -23,16 +32,78 @@ pub fn execute(
             path,
             permission,
         } => {
-            write_file(content, path, *permission)?;
+            let expanded_path = expand_vars(path, env);
+            let expanded_content = expand_vars(content, env);
+            if dry_run {
+                log_info(&format!("[dry-run] write file: {expanded_path}"));
+                return Ok(());
+            }
+            write_file(&expanded_content, &expanded_path, *permission)?;
         }
         Directive::Symlink { from, to } => {
+            if dry_run {
+                log_info(&format!("[dry-run] symlink: {from} -> {to}"));
+                return Ok(());
+            }
             create_symlink(from, to)?;
         }
         Directive::CopyFile { from, to } => {
+            if dry_run {
+                log_info(&format!("[dry-run] copy: {from} -> {to}"));
+                return Ok(());
+            }
             copy_file(from, to)?;
+        }
+        Directive::Import { .. } => {
+            // Import is handled in main.rs, not here
         }
     }
     Ok(())
+}
+
+pub fn expand_vars(text: &str, env: &HashMap<String, String>) -> String {
+    let mut result = String::with_capacity(text.len());
+    let chars: Vec<char> = text.chars().collect();
+    let mut i = 0;
+    while i < chars.len() {
+        if chars[i] == '$' && i + 1 < chars.len() {
+            if chars[i + 1] == '{' {
+                // ${VAR} form
+                if let Some(end) = chars[i + 2..].iter().position(|&c| c == '}') {
+                    let var: String = chars[i + 2..i + 2 + end].iter().collect();
+                    if let Some(val) = env.get(&var) {
+                        result.push_str(val);
+                        i = i + 3 + end;
+                        continue;
+                    }
+                }
+            } else if chars[i + 1].is_alphanumeric() || chars[i + 1] == '_' {
+                // $VAR form
+                let start = i + 1;
+                let mut end = start;
+                while end < chars.len() && (chars[end].is_alphanumeric() || chars[end] == '_') {
+                    end += 1;
+                }
+                let var: String = chars[start..end].iter().collect();
+                if let Some(val) = env.get(&var) {
+                    result.push_str(val);
+                    i = end;
+                    continue;
+                }
+            }
+        }
+        result.push(chars[i]);
+        i += 1;
+    }
+    result
+}
+
+fn truncate(s: &str, max: usize) -> String {
+    if s.len() <= max {
+        s.to_string()
+    } else {
+        format!("{}...", &s[..max])
+    }
 }
 
 fn execute_shell_script(
@@ -195,4 +266,57 @@ fn copy_file(from: &str, to: &str) -> Result<(), Box<dyn std::error::Error>> {
         "Success creating hard copy. from: {from}, to: {to}"
     ));
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_expand_vars_simple() {
+        let env = HashMap::from([("HOME".into(), "/home/user".into())]);
+        assert_eq!(expand_vars("$HOME/config", &env), "/home/user/config");
+    }
+
+    #[test]
+    fn test_expand_vars_braces() {
+        let env = HashMap::from([("USER".into(), "alice".into())]);
+        assert_eq!(expand_vars("${USER}_dir", &env), "alice_dir");
+    }
+
+    #[test]
+    fn test_expand_vars_undefined_stays() {
+        let env = HashMap::new();
+        assert_eq!(expand_vars("$UNDEFINED", &env), "$UNDEFINED");
+    }
+
+    #[test]
+    fn test_expand_vars_undefined_braces_stays() {
+        let env = HashMap::new();
+        assert_eq!(expand_vars("${UNDEFINED}", &env), "${UNDEFINED}");
+    }
+
+    #[test]
+    fn test_expand_vars_mixed() {
+        let env = HashMap::from([
+            ("GIT_USER".into(), "shotanue".into()),
+            ("GIT_EMAIL".into(), "shotanue@gmail.com".into()),
+        ]);
+        assert_eq!(
+            expand_vars("user = $GIT_USER\nemail = ${GIT_EMAIL}", &env),
+            "user = shotanue\nemail = shotanue@gmail.com"
+        );
+    }
+
+    #[test]
+    fn test_expand_vars_no_vars() {
+        let env = HashMap::new();
+        assert_eq!(expand_vars("plain text", &env), "plain text");
+    }
+
+    #[test]
+    fn test_expand_vars_dollar_end() {
+        let env = HashMap::new();
+        assert_eq!(expand_vars("price$", &env), "price$");
+    }
 }

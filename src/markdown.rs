@@ -29,6 +29,7 @@ const SHELL_LANGS: &[&str] = &["sh", "bash", "zsh", "fish", "nushell", "nu"];
 pub fn parse_markdown(
     text: &str,
     fragments: &[String],
+    tags: &[String],
 ) -> Result<Vec<Directive>, Box<dyn std::error::Error>> {
     if text.trim().is_empty() {
         return Ok(vec![]);
@@ -47,7 +48,7 @@ pub fn parse_markdown(
 
     let mut directives = Vec::new();
     for task in &filtered {
-        if let Some(d) = classify_task(task)? {
+        if let Some(d) = classify_task(task, tags)? {
             directives.push(d);
         }
     }
@@ -154,11 +155,27 @@ fn parse_raw(text: &str) -> Result<Vec<RawTask>, Box<dyn std::error::Error>> {
     Ok(tasks)
 }
 
-fn classify_task(task: &RawTask) -> Result<Option<Directive>, Box<dyn std::error::Error>> {
+fn classify_task(
+    task: &RawTask,
+    tags: &[String],
+) -> Result<Option<Directive>, Box<dyn std::error::Error>> {
     match &task.kind {
         RawTaskKind::CodeBlock { lang, meta, code } => {
             if meta.contains_key("::ignore") {
                 return Ok(None);
+            }
+
+            if let Some(tag_val) = meta.get("::tag?") {
+                let required: Vec<&str> = tag_val.split(',').collect();
+                if !required.iter().any(|r| tags.contains(&r.to_string())) {
+                    return Ok(None);
+                }
+            }
+
+            if meta.contains_key("::markdot") {
+                return Ok(Some(Directive::Import {
+                    body: code.clone(),
+                }));
             }
 
             if let Some(to) = meta.get("::to") {
@@ -333,20 +350,20 @@ mod tests {
 
     #[test]
     fn test_empty_markdown() {
-        let result = parse_markdown("", &[]).unwrap();
+        let result = parse_markdown("", &[], &[]).unwrap();
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_whitespace_only() {
-        let result = parse_markdown("   \n  \n  ", &[]).unwrap();
+        let result = parse_markdown("   \n  \n  ", &[], &[]).unwrap();
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_shell_script() {
         let md = "```bash\necho hello\n```";
-        let result = parse_markdown(md, &[]).unwrap();
+        let result = parse_markdown(md, &[], &[]).unwrap();
         assert_eq!(result.len(), 1);
         match &result[0] {
             Directive::ShellScript { code, lang } => {
@@ -360,14 +377,14 @@ mod tests {
     #[test]
     fn test_ignore_directive() {
         let md = "```bash ::ignore\necho hello\n```";
-        let result = parse_markdown(md, &[]).unwrap();
+        let result = parse_markdown(md, &[], &[]).unwrap();
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_to_directive() {
         let md = "```bash ::to=/tmp/test\necho hello\n```";
-        let result = parse_markdown(md, &[]).unwrap();
+        let result = parse_markdown(md, &[], &[]).unwrap();
         assert_eq!(result.len(), 1);
         match &result[0] {
             Directive::WriteFile {
@@ -386,7 +403,7 @@ mod tests {
     #[test]
     fn test_to_with_permission() {
         let md = "```sh ::to=/tmp/test ::permission=755\necho hello\n```";
-        let result = parse_markdown(md, &[]).unwrap();
+        let result = parse_markdown(md, &[], &[]).unwrap();
         assert_eq!(result.len(), 1);
         match &result[0] {
             Directive::WriteFile {
@@ -405,7 +422,7 @@ mod tests {
     #[test]
     fn test_to_suppresses_shell_execution() {
         let md = "```bash ::to=/tmp/test\ntouch /tmp/should-not-exist\n```";
-        let result = parse_markdown(md, &[]).unwrap();
+        let result = parse_markdown(md, &[], &[]).unwrap();
         assert_eq!(result.len(), 1);
         assert!(matches!(&result[0], Directive::WriteFile { .. }));
     }
@@ -413,7 +430,7 @@ mod tests {
     #[test]
     fn test_brewfile() {
         let md = "```brewfile\nbrew \"git\"\n```";
-        let result = parse_markdown(md, &[]).unwrap();
+        let result = parse_markdown(md, &[], &[]).unwrap();
         assert_eq!(result.len(), 1);
         match &result[0] {
             Directive::Brewfile { code, args } => {
@@ -427,7 +444,7 @@ mod tests {
     #[test]
     fn test_brewfile_with_args() {
         let md = "```brewfile ::args=\"--verbose --no-lock\"\nbrew \"git\"\n```";
-        let result = parse_markdown(md, &[]).unwrap();
+        let result = parse_markdown(md, &[], &[]).unwrap();
         assert_eq!(result.len(), 1);
         match &result[0] {
             Directive::Brewfile { args, .. } => {
@@ -440,7 +457,7 @@ mod tests {
     #[test]
     fn test_symlink() {
         let md = "[~/target](~/source)";
-        let result = parse_markdown(md, &[]).unwrap();
+        let result = parse_markdown(md, &[], &[]).unwrap();
         assert_eq!(result.len(), 1);
         match &result[0] {
             Directive::Symlink { from, to } => {
@@ -454,14 +471,14 @@ mod tests {
     #[test]
     fn test_autolink_skipped() {
         let md = "[https://example.com](https://example.com)";
-        let result = parse_markdown(md, &[]).unwrap();
+        let result = parse_markdown(md, &[], &[]).unwrap();
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_image_copy() {
         let md = "![~/target](~/source)";
-        let result = parse_markdown(md, &[]).unwrap();
+        let result = parse_markdown(md, &[], &[]).unwrap();
         assert_eq!(result.len(), 1);
         match &result[0] {
             Directive::CopyFile { from, to } => {
@@ -475,7 +492,7 @@ mod tests {
     #[test]
     fn test_fragment_filtering() {
         let md = "# Section A\n```bash\necho a\n```\n# Section B\n```bash\necho b\n```";
-        let result = parse_markdown(md, &["Section A".to_string()]).unwrap();
+        let result = parse_markdown(md, &["Section A".to_string()], &[]).unwrap();
         assert_eq!(result.len(), 1);
         match &result[0] {
             Directive::ShellScript { code, .. } => {
@@ -488,21 +505,21 @@ mod tests {
     #[test]
     fn test_no_fragment_returns_all() {
         let md = "# Section A\n```bash\necho a\n```\n# Section B\n```bash\necho b\n```";
-        let result = parse_markdown(md, &[]).unwrap();
+        let result = parse_markdown(md, &[], &[]).unwrap();
         assert_eq!(result.len(), 2);
     }
 
     #[test]
     fn test_unknown_lang_skipped() {
         let md = "```python\nprint('hello')\n```";
-        let result = parse_markdown(md, &[]).unwrap();
+        let result = parse_markdown(md, &[], &[]).unwrap();
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_unknown_lang_with_to() {
         let md = "```python ::to=/tmp/test.py\nprint('hello')\n```";
-        let result = parse_markdown(md, &[]).unwrap();
+        let result = parse_markdown(md, &[], &[]).unwrap();
         assert_eq!(result.len(), 1);
         assert!(matches!(&result[0], Directive::WriteFile { .. }));
     }
@@ -511,7 +528,7 @@ mod tests {
     fn test_multiple_shell_langs() {
         for lang in &["sh", "bash", "zsh", "fish", "nu", "nushell"] {
             let md = format!("```{lang}\necho hello\n```");
-            let result = parse_markdown(&md, &[]).unwrap();
+            let result = parse_markdown(&md, &[], &[]).unwrap();
             assert_eq!(result.len(), 1, "failed for lang: {lang}");
             assert!(
                 matches!(&result[0], Directive::ShellScript { .. }),
@@ -542,6 +559,74 @@ mod tests {
     }
 
     #[test]
+    fn test_tag_matching_returns_directive() {
+        let md = "```bash ::tag?=darwin\necho hello\n```";
+        let result = parse_markdown(md, &[], &["darwin".to_string()]).unwrap();
+        assert_eq!(result.len(), 1);
+        assert!(matches!(&result[0], Directive::ShellScript { .. }));
+    }
+
+    #[test]
+    fn test_tag_not_matching_skips() {
+        let md = "```bash ::tag?=darwin\necho hello\n```";
+        let result = parse_markdown(md, &[], &["archlinux".to_string()]).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_tag_empty_tags_skips() {
+        let md = "```bash ::tag?=darwin\necho hello\n```";
+        let result = parse_markdown(md, &[], &[]).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_no_tag_always_included() {
+        let md = "```bash\necho hello\n```";
+        let result = parse_markdown(md, &[], &["darwin".to_string()]).unwrap();
+        assert_eq!(result.len(), 1);
+    }
+
+    #[test]
+    fn test_multiple_tag_or() {
+        let md = "```bash ::tag?=darwin ::tag?=archlinux\necho hello\n```";
+        // Match one of them
+        let result = parse_markdown(md, &[], &["archlinux".to_string()]).unwrap();
+        assert_eq!(result.len(), 1);
+        // Match none
+        let result = parse_markdown(md, &[], &["windows".to_string()]).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_markdot_block_returns_import() {
+        let md = "```yaml ::markdot\nimport: child.md\n```";
+        let result = parse_markdown(md, &[], &[]).unwrap();
+        assert_eq!(result.len(), 1);
+        match &result[0] {
+            Directive::Import { body } => {
+                assert!(body.contains("import: child.md"));
+            }
+            _ => panic!("expected Import"),
+        }
+    }
+
+    #[test]
+    fn test_markdot_block_with_tag_matching() {
+        let md = "```yaml ::markdot ::tag?=darwin\nimport: child.md\n```";
+        let result = parse_markdown(md, &[], &["darwin".to_string()]).unwrap();
+        assert_eq!(result.len(), 1);
+        assert!(matches!(&result[0], Directive::Import { .. }));
+    }
+
+    #[test]
+    fn test_markdot_block_with_tag_not_matching() {
+        let md = "```yaml ::markdot ::tag?=darwin\nimport: child.md\n```";
+        let result = parse_markdown(md, &[], &["archlinux".to_string()]).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
     fn test_nested_headings_fragment_buffer() {
         let md = "\
 # A
@@ -553,7 +638,7 @@ echo ab
 ```bash
 echo c
 ```";
-        let result = parse_markdown(md, &["B".to_string()]).unwrap();
+        let result = parse_markdown(md, &["B".to_string()], &[]).unwrap();
         assert_eq!(result.len(), 1);
         match &result[0] {
             Directive::ShellScript { code, .. } => assert_eq!(code, "echo ab"),

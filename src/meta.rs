@@ -125,7 +125,17 @@ pub fn meta_parse(input: &str) -> HashMap<String, String> {
 
 fn push_result(result: &mut HashMap<String, String>, val: &str) {
     if let Some((head, tail)) = val.split_once('=') {
-        result.insert(head.to_string(), tail.to_string());
+        if head == "::tag?" {
+            result
+                .entry(head.to_string())
+                .and_modify(|v| {
+                    v.push(',');
+                    v.push_str(tail);
+                })
+                .or_insert_with(|| tail.to_string());
+        } else {
+            result.insert(head.to_string(), tail.to_string());
+        }
     } else {
         result.insert(val.to_string(), String::new());
     }
@@ -189,5 +199,28 @@ mod tests {
     fn test_args_with_quoted_value() {
         let result = meta_parse("::args=\"--verbose --no-lock\"");
         assert_eq!(result.get("::args").unwrap(), "--verbose --no-lock");
+    }
+
+    #[test]
+    fn test_tag_question_single() {
+        let result = meta_parse("::tag?=darwin");
+        assert_eq!(result.get("::tag?").unwrap(), "darwin");
+    }
+
+    #[test]
+    fn test_tag_question_multiple_or() {
+        let result = meta_parse("::tag?=darwin ::tag?=archlinux");
+        let val = result.get("::tag?").unwrap();
+        assert!(val.contains("darwin"), "should contain darwin: {val}");
+        assert!(val.contains("archlinux"), "should contain archlinux: {val}");
+        // Comma-separated
+        assert_eq!(val.split(',').count(), 2);
+    }
+
+    #[test]
+    fn test_tag_question_with_other_tags() {
+        let result = meta_parse("::markdot ::tag?=darwin");
+        assert_eq!(result.get("::markdot").unwrap(), "");
+        assert_eq!(result.get("::tag?").unwrap(), "darwin");
     }
 }

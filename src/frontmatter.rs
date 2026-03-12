@@ -15,6 +15,14 @@ pub struct EnvConfig {
     pub r#override: HashMap<String, String>,
 }
 
+#[derive(Deserialize, Default, Debug)]
+pub struct MarkdotBlock {
+    #[serde(default)]
+    pub import: Option<String>,
+    #[serde(default)]
+    pub env: EnvConfig,
+}
+
 pub fn extract_frontmatter(text: &str) -> Result<(Config, String), Box<dyn std::error::Error>> {
     let lines: Vec<&str> = text.lines().collect();
 
