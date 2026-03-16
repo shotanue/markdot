@@ -56,7 +56,7 @@ jobs:
             cargo build --release --target ${{ matrix.target }}
           fi
       - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@2.11.4
+        uses: svenstaro/upload-release-action@2.11.5
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/${{ matrix.target }}/release/markdot
