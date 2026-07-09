@@ -1,5 +1,5 @@
 [tools]
-rust = "1.96.1"
+rust = "1.97.0"
 
 [tasks.install]
 run = "cargo install --path . --root ~/.local --force"
